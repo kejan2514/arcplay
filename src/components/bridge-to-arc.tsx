@@ -13,6 +13,7 @@ type BridgeStepView = {
   state: string;
   explorerUrl?: string;
   txHash?: string;
+  errorMessage?: string;
 };
 
 const SOURCE_CHAINS: Array<{ id: SourceChain; name: string; badge: string }> = [
@@ -94,13 +95,15 @@ export default function BridgeToArc() {
           state: step.state,
           explorerUrl: step.explorerUrl,
           txHash: step.txHash,
+          errorMessage: step.errorMessage,
         })),
       );
+      const failedStep = result.steps.find((step) => step.state === "error");
       setStatus(result.state === "success" ? "success" : "error");
       setMessage(
         result.state === "success"
           ? `${result.amount} USDC arrived on ${toLabel}.`
-          : "The bridge finished without a success confirmation. Review the steps below.",
+          : failedStep?.errorMessage ?? "The bridge finished without a success confirmation. Review the steps below.",
       );
     } catch (error) {
       setStatus("error");
@@ -126,9 +129,10 @@ export default function BridgeToArc() {
       });
       const result = await new BridgeKit().retry(retryResult, { from: adapter, to: adapter });
       setRetryResult(result.state === "success" ? null : result);
-      setSteps(result.steps.map((step) => ({ name: step.name, state: step.state, explorerUrl: step.explorerUrl, txHash: step.txHash })));
+      setSteps(result.steps.map((step) => ({ name: step.name, state: step.state, explorerUrl: step.explorerUrl, txHash: step.txHash, errorMessage: step.errorMessage })));
+      const failedStep = result.steps.find((step) => step.state === "error");
       setStatus(result.state === "success" ? "success" : "error");
-      setMessage(result.state === "success" ? `${result.amount} USDC arrived on ${toLabel}.` : "The transfer is still incomplete. Review the latest step and retry when ready.");
+      setMessage(result.state === "success" ? `${result.amount} USDC arrived on ${toLabel}.` : failedStep?.errorMessage ?? "The transfer is still incomplete. Review the latest step and retry when ready.");
     } catch (error) {
       setStatus("error");
       setMessage(bridgeErrorMessage(error));
@@ -169,6 +173,11 @@ export default function BridgeToArc() {
             <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} className="mt-1 h-4 w-4 accent-cyan-400" />
             <span className="text-sm leading-6 text-slate-400">I understand this uses testnet tokens, may require source-chain gas, and does not move real funds.</span>
           </label>
+          {direction === "from-arc" ? (
+            <div className="mt-3 rounded-2xl border border-amber-400/25 bg-amber-400/10 p-4 text-sm leading-6 text-amber-100">
+              Arc uses USDC for gas. Do not bridge your entire balance; keep a small amount on Arc for approval and burn fees. For example, if you have 1 USDC, try 0.90 USDC.
+            </div>
+          ) : null}
         </div>
 
         <aside className="rounded-3xl border border-cyan-400/20 bg-slate-950/70 p-5">
@@ -184,11 +193,11 @@ export default function BridgeToArc() {
             <div className="mt-3 flex justify-between"><span className="text-slate-400">Amount</span><span className="text-white">{isValidAmount ? amount : "—"} USDC</span></div>
           </div>
           <button type="button" onClick={bridgeUSDC} disabled={!confirmed || !isValidAmount || isBusy} className="mt-6 w-full rounded-full bg-gradient-to-r from-cyan-400 to-fuchsia-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50">{status === "connecting" ? "Connecting wallet…" : status === "bridging" ? "Bridge in progress…" : `Bridge to ${toLabel}`}</button>
-          {retryResult ? <button type="button" onClick={retryBridge} disabled={isBusy} className="mt-3 w-full rounded-full border border-amber-400/40 px-5 py-3 text-sm font-bold text-amber-200 transition hover:border-amber-300 hover:text-white disabled:opacity-50">Retry failed step — no new burn</button> : null}
+          {retryResult ? <button type="button" onClick={retryBridge} disabled={isBusy} className="mt-3 w-full rounded-full border border-amber-400/40 px-5 py-3 text-sm font-bold text-amber-200 transition hover:border-amber-300 hover:text-white disabled:opacity-50">Retry failed step</button> : null}
           <p className="mt-3 text-xs leading-5 text-slate-500">Bridge Kit may request approval and burn transactions. Circle Forwarder handles attestation and destination mint; its fee is deducted from the received test USDC.</p>
 
           {message ? <p className={`mt-4 text-sm leading-6 ${status === "error" ? "text-rose-300" : status === "success" ? "text-emerald-300" : "text-cyan-300"}`} role="status">{message}</p> : null}
-          {steps.length > 0 ? <div className="mt-4 space-y-2">{steps.map((step, index) => <div key={`${step.name}-${index}`} className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-xs"><span className="capitalize text-slate-300">{step.name}</span>{step.explorerUrl ? <a href={step.explorerUrl} target="_blank" rel="noreferrer" className="font-semibold text-cyan-300 hover:text-cyan-200">{step.state} ↗</a> : <span className="text-slate-500">{step.state}</span>}</div>)}</div> : null}
+          {steps.length > 0 ? <div className="mt-4 space-y-2">{steps.map((step, index) => <div key={`${step.name}-${index}`} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-xs"><div className="flex items-center justify-between gap-3"><span className="capitalize text-slate-300">{step.name}</span>{step.explorerUrl ? <a href={step.explorerUrl} target="_blank" rel="noreferrer" className="font-semibold text-cyan-300 hover:text-cyan-200">{step.state} ↗</a> : <span className={step.state === "error" ? "text-rose-300" : "text-slate-500"}>{step.state}</span>}</div>{step.errorMessage ? <p className="mt-2 break-words leading-5 text-rose-300">{step.errorMessage}</p> : null}</div>)}</div> : null}
         </aside>
       </div>
     </section>
