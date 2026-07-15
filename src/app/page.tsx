@@ -2,6 +2,7 @@ import WalletConnect from "@/components/wallet-connect";
 import PubgTestCheckout from "@/components/pubg-test-checkout";
 import WalletBalance from "@/components/wallet-balance";
 import OrderHistory from "@/components/order-history";
+import BridgeToArc from "@/components/bridge-to-arc";
 import { GAMES } from "@/lib/game-catalog";
 
 export default function Home() {
@@ -24,12 +25,10 @@ export default function Home() {
               </p>
               <div className="mt-8 flex flex-col items-start gap-3">
                 <WalletConnect />
-                <a
-                  href="#games"
-                  className="inline-flex h-fit items-center justify-center rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-300"
-                >
-                  Explore Games
-                </a>
+                <div className="flex flex-wrap gap-3">
+                  <a href="#games" className="inline-flex h-fit items-center justify-center rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-300">Explore Games</a>
+                  <a href="#bridge" className="inline-flex h-fit items-center justify-center rounded-full border border-fuchsia-400/40 px-6 py-3 text-sm font-semibold text-fuchsia-200 transition hover:border-fuchsia-300 hover:text-white">Bridge to Arc</a>
+                </div>
               </div>
             </div>
 
@@ -60,6 +59,7 @@ export default function Home() {
           </div>
 
           <PubgTestCheckout />
+          <BridgeToArc />
           <OrderHistory />
         </div>
       </section>

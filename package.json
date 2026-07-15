@@ -9,9 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@circle-fin/adapter-viem-v2": "^1.14.0",
+    "@circle-fin/bridge-kit": "^1.12.1",
     "next": "16.2.10",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "viem": "^2.55.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
