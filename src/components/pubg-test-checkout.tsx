@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ARC_NETWORK } from "@/lib/arc-network";
+import { saveDemoOrder } from "@/lib/demo-orders";
 
 const packages = [
   { credits: "60 UC", price: "1.00 test USDC" },
@@ -80,6 +81,13 @@ export default function PubgTestCheckout() {
         });
         if (receipt) {
           if (receipt.status === "0x0") throw new Error("Transaction reverted");
+          saveDemoOrder({
+            id: `${hash}-${Date.now()}`,
+            product: packages[selectedPackage].credits,
+            playerId: playerId.trim(),
+            transactionHash: hash,
+            createdAt: new Date().toISOString(),
+          });
           setStatus("success");
           setMessage("Demo order verified on Arc Testnet. No game credits were delivered.");
           return;

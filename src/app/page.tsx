@@ -1,5 +1,7 @@
 import WalletConnect from "@/components/wallet-connect";
 import PubgTestCheckout from "@/components/pubg-test-checkout";
+import WalletBalance from "@/components/wallet-balance";
+import OrderHistory from "@/components/order-history";
 
 export default function Home() {
   const games = [
@@ -55,25 +57,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-fuchsia-500/20 bg-gradient-to-br from-fuchsia-500/10 to-cyan-500/10 p-5 sm:min-w-[280px]">
-              <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
-                Live balance
-              </p>
-              <div className="mt-3 flex items-end justify-between">
-                <span className="text-3xl font-semibold text-white">1.42</span>
-                <span className="text-sm font-medium text-cyan-300">Arc</span>
-              </div>
-              <div className="mt-4 space-y-2 text-sm text-slate-300">
-                <div className="flex justify-between">
-                  <span>USDC</span>
-                  <span className="text-white">$120.00</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Credits</span>
-                  <span className="text-white">2,450</span>
-                </div>
-              </div>
-            </div>
+            <WalletBalance />
           </div>
 
           <div id="games" className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -100,6 +84,7 @@ export default function Home() {
           </div>
 
           <PubgTestCheckout />
+          <OrderHistory />
         </div>
       </section>
     </main>
