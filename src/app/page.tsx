@@ -1,3 +1,5 @@
+import WalletConnect from "@/components/wallet-connect";
+
 export default function Home() {
   const games = [
     {
@@ -38,15 +40,10 @@ export default function Home() {
                 Buy game credits using Arc blockchain and USDC
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <a
-                  href="#"
-                  className="inline-flex items-center justify-center rounded-full bg-cyan-400 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
-                >
-                  Connect Wallet
-                </a>
+                <WalletConnect />
                 <a
                   href="#games"
-                  className="inline-flex items-center justify-center rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-300"
+                  className="inline-flex h-fit items-center justify-center rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-300"
                 >
                   Explore Games
                 </a>
