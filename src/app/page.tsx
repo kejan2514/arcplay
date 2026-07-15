@@ -2,34 +2,10 @@ import WalletConnect from "@/components/wallet-connect";
 import PubgTestCheckout from "@/components/pubg-test-checkout";
 import WalletBalance from "@/components/wallet-balance";
 import OrderHistory from "@/components/order-history";
+import { GAMES } from "@/lib/game-catalog";
 
 export default function Home() {
-  const games = [
-    {
-      name: "PUBG Mobile",
-      description: "Instant credit packs for ranked drops and battle passes.",
-      icon: "🎮",
-      href: "#pubg-checkout",
-    },
-    {
-      name: "Free Fire",
-      description: "Fast top-ups for diamonds and elite bundles.",
-      icon: "🔥",
-      href: "#games",
-    },
-    {
-      name: "Mobile Legends",
-      description: "Secure purchases for battle points and skins.",
-      icon: "⚔️",
-      href: "#games",
-    },
-    {
-      name: "Valorant",
-      description: "Seamless credits for premium in-game upgrades.",
-      icon: "✦",
-      href: "#games",
-    },
-  ];
+  const games = GAMES;
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.25),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(217,70,239,0.2),_transparent_30%),#020617] px-4 py-8 text-slate-100 sm:px-6 lg:px-8">
@@ -60,7 +36,7 @@ export default function Home() {
             <WalletBalance />
           </div>
 
-          <div id="games" className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div id="games" className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {games.map((game) => (
               <article
                 key={game.name}
@@ -74,7 +50,7 @@ export default function Home() {
                   {game.description}
                 </p>
                 <a
-                  href={game.href}
+                  href="#checkout"
                   className="mt-4 inline-flex text-sm font-medium text-cyan-300 transition group-hover:text-cyan-200"
                 >
                   Buy credits →

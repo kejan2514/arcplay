@@ -50,7 +50,7 @@ export default function OrderHistory() {
             >
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-semibold text-white">PUBG Mobile · {order.product}</span>
+                  <span className="font-semibold text-white">{order.game || "PUBG Mobile"} · {order.product}</span>
                   <span className="rounded-full bg-emerald-400/10 px-2 py-0.5 text-xs text-emerald-300">
                     Verified
                   </span>

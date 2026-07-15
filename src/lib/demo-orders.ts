@@ -4,6 +4,7 @@ export const BALANCE_REFRESH_EVENT = "arcplay:balance-refresh";
 
 export type DemoOrder = {
   id: string;
+  game: string;
   product: string;
   playerId: string;
   transactionHash: string;
