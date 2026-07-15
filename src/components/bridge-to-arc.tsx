@@ -52,6 +52,7 @@ export default function BridgeToArc() {
   const toChain = direction === "to-arc" ? "Arc_Testnet" : sourceChain;
   const fromLabel = direction === "to-arc" ? selectedNetwork.name : "Arc Testnet";
   const toLabel = direction === "to-arc" ? "Arc Testnet" : selectedNetwork.name;
+  const usesForwarder = direction === "to-arc" || sourceChain !== "Ethereum_Sepolia";
 
   async function bridgeUSDC() {
     if (!confirmed || !isValidAmount || isBusy) return;
@@ -84,7 +85,7 @@ export default function BridgeToArc() {
 
       const result = await new BridgeKit().bridge({
         from: { adapter, chain: fromChain },
-        to: { adapter, chain: toChain, useForwarder: true },
+        to: { adapter, chain: toChain, useForwarder: usesForwarder },
         amount,
       });
 
@@ -189,12 +190,12 @@ export default function BridgeToArc() {
           </div>
           <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm">
             <div className="flex justify-between"><span className="text-slate-400">Asset</span><span className="text-white">Native USDC</span></div>
-            <div className="mt-3 flex justify-between"><span className="text-slate-400">Protocol</span><span className="text-white">CCTP + Forwarder</span></div>
+            <div className="mt-3 flex justify-between"><span className="text-slate-400">Protocol</span><span className="text-white">{usesForwarder ? "CCTP + Forwarder" : "CCTP direct mint"}</span></div>
             <div className="mt-3 flex justify-between"><span className="text-slate-400">Amount</span><span className="text-white">{isValidAmount ? amount : "—"} USDC</span></div>
           </div>
           <button type="button" onClick={bridgeUSDC} disabled={!confirmed || !isValidAmount || isBusy} className="mt-6 w-full rounded-full bg-gradient-to-r from-cyan-400 to-fuchsia-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50">{status === "connecting" ? "Connecting wallet…" : status === "bridging" ? "Bridge in progress…" : `Bridge to ${toLabel}`}</button>
           {retryResult ? <button type="button" onClick={retryBridge} disabled={isBusy} className="mt-3 w-full rounded-full border border-amber-400/40 px-5 py-3 text-sm font-bold text-amber-200 transition hover:border-amber-300 hover:text-white disabled:opacity-50">Retry failed step</button> : null}
-          <p className="mt-3 text-xs leading-5 text-slate-500">Bridge Kit may request approval and burn transactions. Circle Forwarder handles attestation and destination mint; its fee is deducted from the received test USDC.</p>
+          <p className="mt-3 text-xs leading-5 text-slate-500">{usesForwarder ? "Bridge Kit may request approval and burn transactions. Circle Forwarder handles attestation and destination mint; its fee is deducted from the received test USDC." : "Ethereum uses direct mint for small transfers because its Forwarder fee can exceed the amount. Keep Sepolia ETH in your wallet for the destination mint gas transaction."}</p>
 
           {message ? <p className={`mt-4 text-sm leading-6 ${status === "error" ? "text-rose-300" : status === "success" ? "text-emerald-300" : "text-cyan-300"}`} role="status">{message}</p> : null}
           {steps.length > 0 ? <div className="mt-4 space-y-2">{steps.map((step, index) => <div key={`${step.name}-${index}`} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-xs"><div className="flex items-center justify-between gap-3"><span className="capitalize text-slate-300">{step.name}</span>{step.explorerUrl ? <a href={step.explorerUrl} target="_blank" rel="noreferrer" className="font-semibold text-cyan-300 hover:text-cyan-200">{step.state} ↗</a> : <span className={step.state === "error" ? "text-rose-300" : "text-slate-500"}>{step.state}</span>}</div>{step.errorMessage ? <p className="mt-2 break-words leading-5 text-rose-300">{step.errorMessage}</p> : null}</div>)}</div> : null}
