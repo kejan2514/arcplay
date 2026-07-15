@@ -1,4 +1,5 @@
 import WalletConnect from "@/components/wallet-connect";
+import PubgTestCheckout from "@/components/pubg-test-checkout";
 
 export default function Home() {
   const games = [
@@ -6,21 +7,25 @@ export default function Home() {
       name: "PUBG Mobile",
       description: "Instant credit packs for ranked drops and battle passes.",
       icon: "🎮",
+      href: "#pubg-checkout",
     },
     {
       name: "Free Fire",
       description: "Fast top-ups for diamonds and elite bundles.",
       icon: "🔥",
+      href: "#games",
     },
     {
       name: "Mobile Legends",
       description: "Secure purchases for battle points and skins.",
       icon: "⚔️",
+      href: "#games",
     },
     {
       name: "Valorant",
       description: "Seamless credits for premium in-game upgrades.",
       icon: "✦",
+      href: "#games",
     },
   ];
 
@@ -84,12 +89,17 @@ export default function Home() {
                 <p className="mt-2 text-sm leading-6 text-slate-400">
                   {game.description}
                 </p>
-                <div className="mt-4 inline-flex text-sm font-medium text-cyan-300 transition group-hover:text-cyan-200">
+                <a
+                  href={game.href}
+                  className="mt-4 inline-flex text-sm font-medium text-cyan-300 transition group-hover:text-cyan-200"
+                >
                   Buy credits →
-                </div>
+                </a>
               </article>
             ))}
           </div>
+
+          <PubgTestCheckout />
         </div>
       </section>
     </main>
