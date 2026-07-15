@@ -46,7 +46,7 @@ export default function Home() {
               <p className="mt-5 max-w-xl text-lg text-slate-300 sm:text-xl">
                 Buy game credits using Arc blockchain and USDC
               </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-8 flex flex-col items-start gap-3">
                 <WalletConnect />
                 <a
                   href="#games"

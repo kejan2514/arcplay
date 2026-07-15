@@ -7,6 +7,7 @@ interface EthereumProvider {
   request<T = unknown>(request: EthereumRequest): Promise<T>;
   on?(event: "accountsChanged", listener: (accounts: string[]) => void): void;
   on?(event: "chainChanged", listener: (chainId: string) => void): void;
+  on?(event: "disconnect", listener: () => void): void;
   removeListener?(
     event: "accountsChanged",
     listener: (accounts: string[]) => void,
@@ -15,6 +16,7 @@ interface EthereumProvider {
     event: "chainChanged",
     listener: (chainId: string) => void,
   ): void;
+  removeListener?(event: "disconnect", listener: () => void): void;
 }
 
 interface Window {
