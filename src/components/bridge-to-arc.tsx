@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { EIP1193Provider } from "viem";
+import type { BridgeResult } from "@circle-fin/bridge-kit";
 
 type SourceChain = "Ethereum_Sepolia" | "Base_Sepolia" | "Arbitrum_Sepolia";
 type BridgeStatus = "idle" | "connecting" | "bridging" | "success" | "error";
@@ -38,6 +39,7 @@ export default function BridgeToArc() {
   const [message, setMessage] = useState("");
   const [steps, setSteps] = useState<BridgeStepView[]>([]);
   const [confirmed, setConfirmed] = useState(false);
+  const [retryResult, setRetryResult] = useState<BridgeResult | null>(null);
 
   const amountNumber = Number(amount);
   const isValidAmount = Number.isFinite(amountNumber) && amountNumber > 0;
@@ -56,6 +58,7 @@ export default function BridgeToArc() {
     setStatus("connecting");
     setMessage("Connecting to your wallet…");
     setSteps([]);
+    setRetryResult(null);
 
     try {
       const [{ BridgeKit }, { createViemAdapterFromProvider }] = await Promise.all([
@@ -73,10 +76,11 @@ export default function BridgeToArc() {
 
       const result = await new BridgeKit().bridge({
         from: { adapter, chain: sourceChain },
-        to: { adapter, chain: "Arc_Testnet" },
+        to: { adapter, chain: "Arc_Testnet", useForwarder: true },
         amount,
       });
 
+      setRetryResult(result.state === "success" ? null : result);
       setSteps(
         result.steps.map((step) => ({
           name: step.name,
@@ -91,6 +95,33 @@ export default function BridgeToArc() {
           ? `${result.amount} USDC arrived on Arc Testnet.`
           : "The bridge finished without a success confirmation. Review the steps below.",
       );
+    } catch (error) {
+      setStatus("error");
+      setMessage(bridgeErrorMessage(error));
+    }
+  }
+
+  async function retryBridge() {
+    const provider = window.ethereum;
+    if (!provider || !retryResult || isBusy) return;
+
+    setStatus("bridging");
+    setMessage("Resuming the existing transfer from its failed step. No new burn will be created.");
+
+    try {
+      const [{ BridgeKit }, { createViemAdapterFromProvider }] = await Promise.all([
+        import("@circle-fin/bridge-kit"),
+        import("@circle-fin/adapter-viem-v2"),
+      ]);
+      const adapter = await createViemAdapterFromProvider({
+        provider: provider as EIP1193Provider,
+        capabilities: { addressContext: "user-controlled" },
+      });
+      const result = await new BridgeKit().retry(retryResult, { from: adapter, to: adapter });
+      setRetryResult(result.state === "success" ? null : result);
+      setSteps(result.steps.map((step) => ({ name: step.name, state: step.state, explorerUrl: step.explorerUrl, txHash: step.txHash })));
+      setStatus(result.state === "success" ? "success" : "error");
+      setMessage(result.state === "success" ? `${result.amount} USDC arrived on Arc Testnet.` : "The transfer is still incomplete. Review the latest step and retry when ready.");
     } catch (error) {
       setStatus("error");
       setMessage(bridgeErrorMessage(error));
@@ -142,11 +173,12 @@ export default function BridgeToArc() {
           </div>
           <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm">
             <div className="flex justify-between"><span className="text-slate-400">Asset</span><span className="text-white">Native USDC</span></div>
-            <div className="mt-3 flex justify-between"><span className="text-slate-400">Protocol</span><span className="text-white">Circle CCTP</span></div>
+            <div className="mt-3 flex justify-between"><span className="text-slate-400">Protocol</span><span className="text-white">CCTP + Forwarder</span></div>
             <div className="mt-3 flex justify-between"><span className="text-slate-400">Amount</span><span className="text-white">{isValidAmount ? amount : "—"} USDC</span></div>
           </div>
           <button type="button" onClick={bridgeUSDC} disabled={!confirmed || !isValidAmount || isBusy} className="mt-6 w-full rounded-full bg-gradient-to-r from-cyan-400 to-fuchsia-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50">{status === "connecting" ? "Connecting wallet…" : status === "bridging" ? "Bridge in progress…" : "Bridge to Arc Testnet"}</button>
-          <p className="mt-3 text-xs leading-5 text-slate-500">Bridge Kit may request approval, burn, network switching, and mint transactions. Verify every wallet prompt before signing.</p>
+          {retryResult ? <button type="button" onClick={retryBridge} disabled={isBusy} className="mt-3 w-full rounded-full border border-amber-400/40 px-5 py-3 text-sm font-bold text-amber-200 transition hover:border-amber-300 hover:text-white disabled:opacity-50">Retry failed step — no new burn</button> : null}
+          <p className="mt-3 text-xs leading-5 text-slate-500">Bridge Kit may request approval and burn transactions. Circle Forwarder handles attestation and destination mint; its fee is deducted from the received test USDC.</p>
 
           {message ? <p className={`mt-4 text-sm leading-6 ${status === "error" ? "text-rose-300" : status === "success" ? "text-emerald-300" : "text-cyan-300"}`} role="status">{message}</p> : null}
           {steps.length > 0 ? <div className="mt-4 space-y-2">{steps.map((step, index) => <div key={`${step.name}-${index}`} className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-xs"><span className="capitalize text-slate-300">{step.name}</span>{step.explorerUrl ? <a href={step.explorerUrl} target="_blank" rel="noreferrer" className="font-semibold text-cyan-300 hover:text-cyan-200">{step.state} ↗</a> : <span className="text-slate-500">{step.state}</span>}</div>)}</div> : null}
