@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ArcPay
 
-## Getting Started
+**The Agentic Commerce Layer on Arc.**
 
-First, run the development server:
+ArcPay is an open-source reference demo for agentic commerce on Arc. It combines autonomous payment workflows, wallet connectivity, Circle USDC bridging, a game-credit checkout, and transaction history in one dark, responsive developer experience.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+> ArcPay is an experimental testnet project. It is not a production payment service and must not be used with real funds.
+
+## Features
+
+- Agentic workflow visualization from trigger to settlement
+- AI agent status, reputation, and analytics dashboard
+- Wallet connection and testnet USDC balance display
+- Circle Bridge Kit flow for bridging USDC to Arc
+- Game-credit catalog and PUBG test checkout
+- Local order history for completed demo purchases
+- Arc network and developer-stack showcase
+- Responsive, glassmorphism-based Arc visual theme
+
+## Architecture
+
+```text
+Wallet / Schedule / Webhook
+            ↓
+         AI Agent
+            ↓
+   Payment Workflow Rules
+            ↓
+ Arc Testnet + Circle USDC
+            ↓
+ Merchant Settlement + Receipt
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The App Router page composes focused sections from `src/components`. Existing interactive wallet, checkout, bridge, balance, and history components remain isolated client components, while the surrounding presentation is server-rendered.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tech stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Next.js 16 App Router
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- viem
+- Circle Bridge Kit and Circle viem adapter
+- Arc Testnet and test USDC
 
-## Learn More
+The interface also presents Vyper and ERC-8004 as part of the project roadmap and agentic-commerce architecture; they are not yet implemented as production integrations.
 
-To learn more about Next.js, take a look at the following resources:
+## Local setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Prerequisites
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Node.js 20 or newer
+- npm
+- A browser wallet configured for the supported test networks
 
-## Deploy on Vercel
+### Run the app
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+git clone <your-repository-url>
+cd arcplay
+npm install
+npm run dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000).
+
+### Quality checks
+
+```bash
+npm run lint
+npm run build
+```
+
+No environment variables are required for the current demo. Wallet transactions still require a compatible wallet and testnet funds.
+
+## Testnet disclaimer
+
+ArcPay is demonstration software. Network metrics and AI-agent analytics shown in the showcase sections are illustrative unless explicitly connected to a live provider. Contract addresses, token details, and wallet prompts must be independently verified before signing. Never send production assets or real USDC to testnet contracts or addresses.
+
+## Roadmap
+
+- [x] Arc-themed landing page and commerce demo
+- [x] Wallet connection, balance, checkout, bridge, and order history
+- [x] Reusable component architecture
+- [ ] Connect dashboard metrics to live Arc data
+- [ ] Implement Vyper payment-policy contracts
+- [ ] Add ERC-8004-compatible agent identity and reputation
+- [ ] Ship a configurable workflow builder and merchant SDK
+- [ ] Add automated tests and audited production safeguards
+
+## License
+
+This project is available under the [MIT License](LICENSE).

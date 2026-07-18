@@ -12,6 +12,10 @@ function shortHash(hash: string) {
   return `${hash.slice(0, 8)}…${hash.slice(-6)}`;
 }
 
+function isTransactionHash(value: string) {
+  return /^0x[0-9a-fA-F]{64}$/.test(value);
+}
+
 export default function OrderHistory() {
   const [orders, setOrders] = useState<DemoOrder[]>([]);
 
@@ -43,32 +47,40 @@ export default function OrderHistory() {
         </div>
       ) : (
         <div className="mt-6 space-y-3">
-          {orders.map((order) => (
-            <article
-              key={order.id}
-              className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 sm:flex-row sm:items-center sm:justify-between"
-            >
+          {orders.map((order) => {
+            const hasArcTransaction = isTransactionHash(order.transactionHash);
+
+            return (
+              <article
+                key={order.id}
+                className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-white">{order.game || "PUBG Mobile"} · {order.product}</span>
-                  <span className="rounded-full bg-emerald-400/10 px-2 py-0.5 text-xs text-emerald-300">
-                    Verified
+                  <span className={`rounded-full px-2 py-0.5 text-xs ${hasArcTransaction ? "bg-emerald-400/10 text-emerald-300" : "bg-amber-400/10 text-amber-200"}`}>
+                    {hasArcTransaction ? "Arc verified" : order.transactionHash.startsWith("Apple Pay") ? "Apple Pay DEMO" : "Google Pay TEST"}
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
                   Player {order.playerId} · {new Date(order.createdAt).toLocaleString()}
                 </p>
               </div>
-              <a
-                href={`${ARC_NETWORK.explorerUrl}/tx/${order.transactionHash}`}
-                target="_blank"
-                rel="noreferrer"
-                className="font-mono text-sm font-semibold text-cyan-300 hover:text-cyan-200"
-              >
-                {shortHash(order.transactionHash)} ↗
-              </a>
-            </article>
-          ))}
+                {hasArcTransaction ? (
+                  <a
+                    href={`${ARC_NETWORK.explorerUrl}/tx/${order.transactionHash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-mono text-sm font-semibold text-cyan-300 hover:text-cyan-200"
+                  >
+                    {shortHash(order.transactionHash)} ↗
+                  </a>
+                ) : (
+                  <span className="text-sm font-semibold text-slate-400">No Arc transaction</span>
+                )}
+              </article>
+            );
+          })}
         </div>
       )}
     </section>

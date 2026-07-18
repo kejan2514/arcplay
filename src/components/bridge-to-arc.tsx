@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { EIP1193Provider } from "viem";
 import type { BridgeResult } from "@circle-fin/bridge-kit";
+import { ARC_NETWORK } from "@/lib/arc-network";
+import ArcSuccessModal from "@/components/arc-success-modal";
 
 type SourceChain = "Ethereum_Sepolia" | "Base_Sepolia" | "Arbitrum_Sepolia";
 type BridgeDirection = "to-arc" | "from-arc";
@@ -21,6 +23,71 @@ const SOURCE_CHAINS: Array<{ id: SourceChain; name: string; badge: string }> = [
   { id: "Base_Sepolia", name: "Base Sepolia", badge: "BASE" },
   { id: "Arbitrum_Sepolia", name: "Arbitrum Sepolia", badge: "ARB" },
 ];
+
+type WalletChain = SourceChain | "Arc_Testnet";
+
+const WALLET_CHAINS: Record<WalletChain, {
+  chainId: string;
+  chainName: string;
+  nativeCurrency: { name: string; symbol: string; decimals: number };
+  rpcUrls: string[];
+  blockExplorerUrls: string[];
+}> = {
+  Ethereum_Sepolia: {
+    chainId: "0xaa36a7",
+    chainName: "Ethereum Sepolia",
+    nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: ["https://rpc.sepolia.org"],
+    blockExplorerUrls: ["https://sepolia.etherscan.io"],
+  },
+  Base_Sepolia: {
+    chainId: "0x14a34",
+    chainName: "Base Sepolia",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: ["https://sepolia.base.org"],
+    blockExplorerUrls: ["https://sepolia.basescan.org"],
+  },
+  Arbitrum_Sepolia: {
+    chainId: "0x66eee",
+    chainName: "Arbitrum Sepolia",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: ["https://sepolia-rollup.arbitrum.io/rpc"],
+    blockExplorerUrls: ["https://sepolia.arbiscan.io"],
+  },
+  Arc_Testnet: {
+    chainId: ARC_NETWORK.chainIdHex,
+    chainName: ARC_NETWORK.chainName,
+    nativeCurrency: ARC_NETWORK.nativeCurrency,
+    rpcUrls: [ARC_NETWORK.rpcUrl],
+    blockExplorerUrls: [ARC_NETWORK.explorerUrl],
+  },
+};
+
+async function ensureWalletChain(provider: EIP1193Provider, chain: WalletChain) {
+  const config = WALLET_CHAINS[chain];
+
+  try {
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: config.chainId }],
+    });
+  } catch (error) {
+    const code = typeof error === "object" && error && "code" in error
+      ? Number(error.code)
+      : undefined;
+    const message = typeof error === "object" && error && "message" in error
+      ? String(error.message)
+      : "";
+    const chainIsMissing = code === 4902 || /unrecognized chain|unknown chain|not added/i.test(message);
+
+    if (!chainIsMissing) throw error;
+
+    await provider.request({
+      method: "wallet_addEthereumChain",
+      params: [config],
+    });
+  }
+}
 
 function bridgeErrorMessage(error: unknown) {
   if (typeof error === "object" && error) {
@@ -43,6 +110,8 @@ export default function BridgeToArc() {
   const [steps, setSteps] = useState<BridgeStepView[]>([]);
   const [confirmed, setConfirmed] = useState(false);
   const [retryResult, setRetryResult] = useState<BridgeResult | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successExplorerUrl, setSuccessExplorerUrl] = useState<string>();
 
   const amountNumber = Number(amount);
   const isValidAmount = Number.isFinite(amountNumber) && amountNumber > 0;
@@ -70,13 +139,17 @@ export default function BridgeToArc() {
     setRetryResult(null);
 
     try {
+      const walletProvider = provider as EIP1193Provider;
+      await ensureWalletChain(walletProvider, toChain);
+      await ensureWalletChain(walletProvider, fromChain);
+
       const [{ BridgeKit }, { createViemAdapterFromProvider }] = await Promise.all([
         import("@circle-fin/bridge-kit"),
         import("@circle-fin/adapter-viem-v2"),
       ]);
 
       const adapter = await createViemAdapterFromProvider({
-        provider: provider as EIP1193Provider,
+        provider: walletProvider,
         capabilities: { addressContext: "user-controlled" },
       });
 
@@ -101,6 +174,10 @@ export default function BridgeToArc() {
       );
       const failedStep = result.steps.find((step) => step.state === "error");
       setStatus(result.state === "success" ? "success" : "error");
+      if (result.state === "success") {
+        setSuccessExplorerUrl([...result.steps].reverse().find((step) => step.explorerUrl)?.explorerUrl);
+        setShowSuccess(true);
+      }
       setMessage(
         result.state === "success"
           ? `${result.amount} USDC arrived on ${toLabel}.`
@@ -120,12 +197,16 @@ export default function BridgeToArc() {
     setMessage("Resuming the existing transfer from its failed step. No new burn will be created.");
 
     try {
+      const walletProvider = provider as EIP1193Provider;
+      await ensureWalletChain(walletProvider, toChain);
+      await ensureWalletChain(walletProvider, fromChain);
+
       const [{ BridgeKit }, { createViemAdapterFromProvider }] = await Promise.all([
         import("@circle-fin/bridge-kit"),
         import("@circle-fin/adapter-viem-v2"),
       ]);
       const adapter = await createViemAdapterFromProvider({
-        provider: provider as EIP1193Provider,
+        provider: walletProvider,
         capabilities: { addressContext: "user-controlled" },
       });
       const result = await new BridgeKit().retry(retryResult, { from: adapter, to: adapter });
@@ -133,6 +214,10 @@ export default function BridgeToArc() {
       setSteps(result.steps.map((step) => ({ name: step.name, state: step.state, explorerUrl: step.explorerUrl, txHash: step.txHash, errorMessage: step.errorMessage })));
       const failedStep = result.steps.find((step) => step.state === "error");
       setStatus(result.state === "success" ? "success" : "error");
+      if (result.state === "success") {
+        setSuccessExplorerUrl([...result.steps].reverse().find((step) => step.explorerUrl)?.explorerUrl);
+        setShowSuccess(true);
+      }
       setMessage(result.state === "success" ? `${result.amount} USDC arrived on ${toLabel}.` : failedStep?.errorMessage ?? "The transfer is still incomplete. Review the latest step and retry when ready.");
     } catch (error) {
       setStatus("error");
@@ -201,6 +286,7 @@ export default function BridgeToArc() {
           {steps.length > 0 ? <div className="mt-4 space-y-2">{steps.map((step, index) => <div key={`${step.name}-${index}`} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 text-xs"><div className="flex items-center justify-between gap-3"><span className="capitalize text-slate-300">{step.name}</span>{step.explorerUrl ? <a href={step.explorerUrl} target="_blank" rel="noreferrer" className="font-semibold text-cyan-300 hover:text-cyan-200">{step.state} ↗</a> : <span className={step.state === "error" ? "text-rose-300" : "text-slate-500"}>{step.state}</span>}</div>{step.errorMessage ? <p className="mt-2 break-words leading-5 text-rose-300">{step.errorMessage}</p> : null}</div>)}</div> : null}
         </aside>
       </div>
+      <ArcSuccessModal open={showSuccess} onClose={() => setShowSuccess(false)} title="Bridge completed" description={`Your test USDC transfer to ${toLabel} completed successfully.`} detail={`${amount} USDC · ${fromLabel} → ${toLabel}`} explorerUrl={successExplorerUrl} />
     </section>
   );
 }

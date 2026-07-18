@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Script from "next/script";
+import ArcSuccessModal from "@/components/arc-success-modal";
 import { ARC_NETWORK } from "@/lib/arc-network";
 import { saveDemoOrder } from "@/lib/demo-orders";
 import { GAMES } from "@/lib/game-catalog";
@@ -9,9 +11,24 @@ type PaymentMethod = "apple" | "google" | "wallet";
 type CheckoutStatus = "idle" | "confirming" | "pending" | "success" | "error";
 type TransactionReceipt = { status?: string };
 
+type GooglePaymentsClient = {
+  isReadyToPay(request: Record<string, unknown>): Promise<{ result: boolean }>;
+  loadPaymentData(request: Record<string, unknown>): Promise<unknown>;
+};
+
+type GooglePayWindow = Window & {
+  google?: {
+    payments?: {
+      api?: {
+        PaymentsClient: new (options: { environment: "TEST" }) => GooglePaymentsClient;
+      };
+    };
+  };
+};
+
 const methods = [
   { id: "apple" as const, icon: "●", name: "Apple Pay", detail: "Fiat preview", demo: true },
-  { id: "google" as const, icon: "G", name: "Google Pay", detail: "Fiat preview", demo: true },
+  { id: "google" as const, icon: "G", name: "Google Pay", detail: "Official test sheet", demo: true },
   { id: "wallet" as const, icon: "◇", name: "USDC Wallet", detail: "Arc Testnet", demo: false },
 ];
 
@@ -36,6 +53,8 @@ export default function PubgTestCheckout() {
   const [walletConnected, setWalletConnected] = useState(false);
   const [walletReady, setWalletReady] = useState(false);
   const [demoModal, setDemoModal] = useState<"Apple Pay" | "Google Pay" | null>(null);
+  const [googlePayReady, setGooglePayReady] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const game = GAMES.find((item) => item.id === gameId) ?? GAMES[0];
   const product = game.products.find((item) => item.id === productId) ?? game.products[0];
@@ -65,11 +84,124 @@ export default function PubgTestCheckout() {
   function selectMethod(next: PaymentMethod) {
     setMethod(next); setStatus("idle"); setMessage("");
     if (next === "apple") setDemoModal("Apple Pay");
-    if (next === "google") setDemoModal("Google Pay");
+  }
+
+  function completeApplePayDemo() {
+    if (!accountId.trim()) {
+      setDemoModal(null);
+      setStatus("error");
+      setMessage(`Enter a demo ${game.accountLabel.toLowerCase()} first.`);
+      return;
+    }
+
+    const createdAt = new Date().toISOString();
+    saveDemoOrder({
+      id: `apple-pay-demo-${createdAt}`,
+      game: game.name,
+      product: product.label,
+      playerId: accountId.trim(),
+      transactionHash: "Apple Pay DEMO — no Arc transaction",
+      createdAt,
+    });
+    setDemoModal(null);
+    setStatus("success");
+    setMessage("Apple Pay demo completed. No card was charged and no USDC moved on Arc.");
+    setShowSuccess(true);
+  }
+
+  async function initializeGooglePay() {
+    const GooglePaymentsClient = (window as GooglePayWindow).google?.payments?.api?.PaymentsClient;
+    if (!GooglePaymentsClient) return;
+
+    try {
+      const client = new GooglePaymentsClient({ environment: "TEST" });
+      const response = await client.isReadyToPay({
+        apiVersion: 2,
+        apiVersionMinor: 0,
+        allowedPaymentMethods: [{
+          type: "CARD",
+          parameters: {
+            allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
+            allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
+          },
+        }],
+      });
+      setGooglePayReady(response.result);
+    } catch {
+      setGooglePayReady(false);
+    }
+  }
+
+  async function startGooglePayTest() {
+    if (!accountId.trim()) {
+      setStatus("error");
+      setMessage(`Enter a demo ${game.accountLabel.toLowerCase()} first.`);
+      return;
+    }
+
+    const GooglePaymentsClient = (window as GooglePayWindow).google?.payments?.api?.PaymentsClient;
+    if (!GooglePaymentsClient || !googlePayReady) {
+      setStatus("error");
+      setMessage("Google Pay is not available in this browser or has not finished loading.");
+      return;
+    }
+
+    setStatus("confirming");
+    setMessage("Opening the official Google Pay test sheet…");
+
+    try {
+      const client = new GooglePaymentsClient({ environment: "TEST" });
+      await client.loadPaymentData({
+        apiVersion: 2,
+        apiVersionMinor: 0,
+        merchantInfo: { merchantName: "ArcPay Test Store" },
+        allowedPaymentMethods: [{
+          type: "CARD",
+          parameters: {
+            allowedAuthMethods: ["PAN_ONLY", "CRYPTOGRAM_3DS"],
+            allowedCardNetworks: ["AMEX", "DISCOVER", "JCB", "MASTERCARD", "VISA"],
+            billingAddressRequired: true,
+            billingAddressParameters: { format: "MIN" },
+          },
+          tokenizationSpecification: {
+            type: "PAYMENT_GATEWAY",
+            parameters: { gateway: "example", gatewayMerchantId: "exampleGatewayMerchantId" },
+          },
+        }],
+        transactionInfo: {
+          countryCode: "US",
+          currencyCode: "USD",
+          totalPriceStatus: "FINAL",
+          totalPrice: product.price,
+          totalPriceLabel: `${game.shortName} · ${product.label}`,
+        },
+      });
+
+      const createdAt = new Date().toISOString();
+      const orderId = `gpay-test-${createdAt}`;
+      saveDemoOrder({
+        id: orderId,
+        game: game.name,
+        product: product.label,
+        playerId: accountId.trim(),
+        transactionHash: "Google Pay TEST — no Arc transaction",
+        createdAt,
+      });
+      setStatus("success");
+      setMessage("Google Pay TEST authorization completed. No charge was made and no USDC moved on Arc.");
+      setShowSuccess(true);
+    } catch (error) {
+      const reason = typeof error === "object" && error && "statusCode" in error
+        ? String(error.statusCode)
+        : "";
+      setStatus(reason === "CANCELED" ? "idle" : "error");
+      setMessage(reason === "CANCELED" ? "Google Pay test payment was cancelled." : "Google Pay TEST could not open or complete in this browser.");
+    }
   }
 
   async function createTestOrder() {
-    if (method !== "wallet") { setDemoModal(method === "apple" ? "Apple Pay" : "Google Pay"); return; }
+    if (method === "apple") { setDemoModal("Apple Pay"); return; }
+    if (method === "google") { await startGooglePayTest(); return; }
     const provider = window.ethereum;
     if (!provider) { setStatus("error"); setMessage("Connect an EIP-1193 browser wallet first."); return; }
     if (!accountId.trim()) { setStatus("error"); setMessage(`Enter a demo ${game.accountLabel.toLowerCase()}.`); return; }
@@ -87,23 +219,24 @@ export default function PubgTestCheckout() {
         if (receipt) {
           if (receipt.status === "0x0") throw new Error("Transaction reverted");
           saveDemoOrder({ id: hash, game: game.name, product: product.label, playerId: accountId.trim(), transactionHash: hash, createdAt: new Date().toISOString() });
-          setStatus("success"); setMessage("Demo order verified on Arc Testnet. No product was delivered."); return;
+          setStatus("success"); setMessage("Demo order verified on Arc Testnet. No product was delivered."); setShowSuccess(true); return;
         }
         await wait(1_000);
       }
-      setStatus("success"); setMessage("Transaction submitted. Open ArcScan to check its final status.");
+      setStatus("success"); setMessage("Transaction submitted. Open ArcScan to check its final status."); setShowSuccess(true);
     } catch (error) { setStatus("error"); setMessage(errorMessage(error)); }
   }
 
   return (
-    <section id="checkout" className="mt-12 scroll-mt-8 rounded-[2rem] border border-cyan-400/20 bg-slate-900/70 p-6 backdrop-blur-xl sm:p-8">
+    <section id="games" className="mt-12 scroll-mt-8 rounded-[2rem] border border-cyan-400/20 bg-slate-900/70 p-6 backdrop-blur-xl sm:p-8">
+      <Script src="https://pay.google.com/gp/p/js/pay.js" strategy="afterInteractive" onLoad={() => void initializeGooglePay()} onError={() => setGooglePayReady(false)} />
       <div className="flex flex-col gap-3 border-b border-slate-800 pb-6 sm:flex-row sm:items-start sm:justify-between">
-        <div><p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">ArcPay product checkout</p><h2 className="mt-2 text-2xl font-bold text-white">Choose a game and payment method</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Browse demo products, preview fiat payment methods, or create a zero-value proof on Arc Testnet.</p></div>
+        <div><p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">Games marketplace</p><h2 className="mt-2 text-2xl font-bold text-white">Choose a product, package and payment method</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Select a digital gaming product, preview fiat payments, or create a zero-value proof on Arc Testnet.</p></div>
         <span className="w-fit rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-200">Demo only</span>
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {GAMES.map((item) => <button key={item.id} type="button" onClick={() => selectGame(item.id)} className={`rounded-2xl border p-4 text-left transition ${game.id === item.id ? "border-cyan-400/60 bg-cyan-400/10 shadow-[0_0_25px_rgba(34,211,238,0.12)]" : "border-slate-800 bg-slate-950/55 hover:border-cyan-400/30"}`}><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400/20 to-fuchsia-500/20 text-lg">{item.icon}</span><div><p className="font-semibold text-white">{item.name}</p><p className="mt-1 text-xs text-slate-500">{item.description}</p></div></div></button>)}
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {GAMES.map((item) => <button key={item.id} type="button" onClick={() => selectGame(item.id)} aria-pressed={game.id === item.id} className={`group min-h-40 rounded-2xl border p-5 text-left transition duration-200 hover:-translate-y-1 ${game.id === item.id ? "border-cyan-400/60 bg-cyan-400/10 shadow-[0_0_25px_rgba(34,211,238,0.12)]" : "border-slate-800 bg-slate-950/55 hover:border-cyan-400/30"}`}><div className="flex items-start justify-between gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400/20 to-fuchsia-500/20 text-lg">{item.icon}</span>{game.id === item.id ? <span className="rounded-full bg-cyan-400/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-cyan-200">Selected</span> : null}</div><p className="mt-4 font-semibold text-white">{item.name}</p><p className="mt-1 text-xs leading-5 text-slate-500">{item.description}</p><p className="mt-3 text-xs font-semibold text-cyan-300">From {item.products[0].price} USDC →</p></button>)}
       </div>
 
       <div className="mt-8 grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
@@ -116,18 +249,19 @@ export default function PubgTestCheckout() {
           <div className="mt-3 grid gap-3 md:grid-cols-3">{methods.map((item) => <button key={item.id} type="button" onClick={() => selectMethod(item.id)} className={`relative rounded-2xl border p-4 text-left transition ${method === item.id ? "border-cyan-400/60 bg-cyan-400/10" : "border-slate-800 bg-slate-950/60 hover:border-cyan-400/30"}`}><span className="text-xl font-bold text-white">{item.icon}</span><p className="mt-3 font-semibold text-white">{item.name}</p><p className="mt-1 text-xs text-slate-500">{item.detail}</p>{item.demo ? <span className="absolute right-3 top-3 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-200">Demo</span> : null}</button>)}</div>
         </div>
 
-        <aside className="rounded-3xl border border-fuchsia-500/20 bg-slate-950/70 p-5">
+        <aside id="checkout" className="scroll-mt-8 rounded-3xl border border-fuchsia-500/20 bg-slate-950/70 p-5">
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Checkout summary</p>
           <div className="mt-5 flex items-center gap-3"><span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400/20 to-fuchsia-500/20 text-xl">{game.icon}</span><div><p className="font-semibold text-white">{game.name}</p><p className="text-sm text-slate-400">{product.label}</p></div></div>
-          <dl className="mt-6 space-y-3 border-y border-slate-800 py-5 text-sm"><div className="flex justify-between gap-4"><dt className="text-slate-400">Merchant</dt><dd className="text-white">ArcPlay Store</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-400">Displayed price</dt><dd className="text-white">{product.price} USDC</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-400">Test charge</dt><dd className="text-emerald-300">0 USDC</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-400">Network</dt><dd className="text-white">Arc Testnet</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-400">Method</dt><dd className="text-white">{methods.find((item) => item.id === method)?.name}</dd></div></dl>
-          <button type="button" onClick={createTestOrder} disabled={isBusy || (method === "wallet" && !walletReady)} className="mt-6 w-full rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-55">{method !== "wallet" ? `Preview ${method === "apple" ? "Apple Pay" : "Google Pay"}` : !walletConnected ? "Connect Wallet to Pay" : !walletReady ? "Switch to Arc to Pay" : status === "confirming" ? "Confirm in wallet…" : status === "pending" ? "Verifying on Arc…" : "Create test order"}</button>
-          <p className="mt-3 text-xs leading-5 text-slate-500">Fiat methods are visual demos. Wallet checkout sends only a zero-value self-transaction and never delivers real products.</p>
+          <dl className="mt-6 space-y-3 border-y border-slate-800 py-5 text-sm"><div className="flex justify-between gap-4"><dt className="text-slate-400">Merchant</dt><dd className="text-white">ArcPlay Store</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-400">Package</dt><dd className="text-white">{product.price} USDC</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-400">Network fee</dt><dd className="text-emerald-300">Sponsored</dd></div><div className="flex justify-between gap-4 border-t border-slate-800 pt-3 text-base"><dt className="font-semibold text-white">Total</dt><dd className="font-bold text-white">{product.price} USDC</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-400">Network</dt><dd className="text-white">Arc Testnet</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-400">Method</dt><dd className="text-white">{methods.find((item) => item.id === method)?.name}</dd></div></dl>
+          <button type="button" onClick={createTestOrder} disabled={isBusy || (method === "wallet" && !walletReady) || (method === "google" && !googlePayReady)} className="mt-6 w-full rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-55">{method === "apple" ? "Preview Apple Pay" : method === "google" ? status === "confirming" ? "Opening Google Pay…" : googlePayReady ? "Pay with Google Pay · TEST" : "Google Pay unavailable" : !walletConnected ? "Connect Wallet to Pay" : !walletReady ? "Switch to Arc to Pay" : status === "confirming" ? "Confirm in wallet…" : status === "pending" ? "Verifying on Arc…" : "Create test order"}</button>
+          <p className="mt-3 text-xs leading-5 text-slate-500">Google Pay uses its official TEST sheet and processes no charge. Apple Pay remains a visual preview. Wallet checkout sends only a zero-value self-transaction.</p>
           {message ? <p className={`mt-4 text-sm leading-6 ${status === "error" ? "text-rose-300" : "text-emerald-300"}`} role="status">{message}</p> : null}
           {transactionHash ? <a href={`${ARC_NETWORK.explorerUrl}/tx/${transactionHash}`} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-sm font-semibold text-cyan-300 hover:text-cyan-200">View transaction on ArcScan →</a> : null}
         </aside>
       </div>
 
-      {demoModal ? <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 px-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="demo-title"><div className="w-full max-w-md rounded-3xl border border-cyan-400/20 bg-slate-900 p-6 shadow-[0_0_80px_rgba(34,211,238,0.15)]"><div className="flex items-center justify-between"><span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-200">Demo only</span><button type="button" onClick={() => setDemoModal(null)} className="rounded-full border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:border-cyan-400 hover:text-white">Close</button></div><h3 id="demo-title" className="mt-5 text-2xl font-bold text-white">{demoModal} preview</h3><p className="mt-3 leading-7 text-slate-300">Demo payment flow — fiat-to-USDC settlement on Arc will be added later. No card sheet opens and no payment is collected.</p><div className="mt-5 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-sm"><div className="flex justify-between"><span className="text-slate-400">Product</span><span className="text-white">{game.shortName} · {product.label}</span></div><div className="mt-3 flex justify-between"><span className="text-slate-400">Preview total</span><span className="text-white">{product.price} USDC</span></div></div><button type="button" onClick={() => setDemoModal(null)} className="mt-6 w-full rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-300">Return to checkout</button></div></div> : null}
+      {demoModal ? <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 px-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="demo-title"><div className="w-full max-w-md rounded-3xl border border-cyan-400/20 bg-slate-900 p-6 shadow-[0_0_80px_rgba(34,211,238,0.15)]"><div className="flex items-center justify-between"><span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-200">Demo only</span><button type="button" onClick={() => setDemoModal(null)} className="rounded-full border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:border-cyan-400 hover:text-white">Close</button></div><h3 id="demo-title" className="mt-5 text-2xl font-bold text-white">{demoModal} preview</h3><p className="mt-3 leading-7 text-slate-300">Demo payment flow — fiat-to-USDC settlement on Arc will be added later. No card sheet opens and no payment is collected.</p><div className="mt-5 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-sm"><div className="flex justify-between"><span className="text-slate-400">Product</span><span className="text-white">{game.shortName} · {product.label}</span></div><div className="mt-3 flex justify-between"><span className="text-slate-400">Preview total</span><span className="text-white">{product.price} USDC</span></div></div><button type="button" onClick={completeApplePayDemo} className="mt-6 w-full rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-300">Complete demo payment</button><button type="button" onClick={() => setDemoModal(null)} className="mt-3 w-full rounded-full border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-300 hover:border-cyan-400 hover:text-white">Return to checkout</button></div></div> : null}
+      <ArcSuccessModal open={showSuccess} onClose={() => setShowSuccess(false)} title={method === "wallet" ? "Payment verified" : "Demo payment approved"} description={method === "wallet" ? "Your demo order proof was submitted on Arc Testnet." : `${method === "apple" ? "Apple Pay" : "Google Pay"} demo completed successfully. No card was charged and no USDC moved on Arc.`} detail={`${game.name} · ${product.label}`} explorerUrl={transactionHash ? `${ARC_NETWORK.explorerUrl}/tx/${transactionHash}` : undefined} />
     </section>
   );
 }
