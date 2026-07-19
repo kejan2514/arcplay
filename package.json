@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "circle:register-secret": "node --env-file=.env.local scripts/register-circle-entity-secret.mjs",
+    "circle:provision-wallet": "node --env-file=.env.local scripts/provision-circle-wallet.mjs"
   },
   "dependencies": {
     "@circle-fin/adapter-viem-v2": "^1.14.0",

@@ -84,6 +84,20 @@ CIRCLE_ENTITY_SECRET=your_registered_entity_secret
 CIRCLE_WALLET_SET_ID=optional_existing_wallet_set_id
 ```
 
+After adding only `CIRCLE_API_KEY`, register an entity secret without printing it:
+
+```bash
+npm run circle:register-secret
+```
+
+The command saves the secret to `.env.local` and a recovery file under the ignored `recovery/` directory. Move that recovery file to secure private storage immediately.
+
+Provision the first Arc Testnet wallet and persist its wallet set ID locally:
+
+```bash
+npm run circle:provision-wallet
+```
+
 These values are server-only. Never add a `NEXT_PUBLIC_` prefix, paste them into browser code, commit `.env.local`, or share them in screenshots. If `CIRCLE_WALLET_SET_ID` is omitted, the first wallet request creates a wallet set and returns its ID; save it locally before creating additional wallets.
 
 The current integration creates an EOA on `ARC-TESTNET`. It does not fund the wallet, transfer USDC, or deliver a product.

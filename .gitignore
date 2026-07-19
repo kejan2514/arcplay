@@ -34,6 +34,10 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Circle entity-secret recovery files
+/recovery/
+/.circle-wallet.json
+
 # vercel
 .vercel
 
