@@ -12,6 +12,7 @@ ArcPay is an open-source reference demo for agentic commerce on Arc. It combines
 - AI agent status, reputation, and analytics dashboard
 - Wallet connection and testnet USDC balance display
 - Circle Bridge Kit flow for bridging USDC to Arc
+- Server-only Circle developer-controlled wallet integration for Arc Testnet
 - Game-credit catalog and PUBG test checkout
 - Local order history for completed demo purchases
 - Arc network and developer-stack showcase
@@ -71,7 +72,21 @@ npm run lint
 npm run build
 ```
 
-No environment variables are required for the current demo. Wallet transactions still require a compatible wallet and testnet funds.
+Wallet transactions still require a compatible wallet and testnet funds. The Circle wallet panel works in a safe unconfigured state by default.
+
+### Circle developer-controlled wallets
+
+Copy `.env.example` to `.env.local`, then add credentials created in Circle Console:
+
+```text
+CIRCLE_API_KEY=your_api_key
+CIRCLE_ENTITY_SECRET=your_registered_entity_secret
+CIRCLE_WALLET_SET_ID=optional_existing_wallet_set_id
+```
+
+These values are server-only. Never add a `NEXT_PUBLIC_` prefix, paste them into browser code, commit `.env.local`, or share them in screenshots. If `CIRCLE_WALLET_SET_ID` is omitted, the first wallet request creates a wallet set and returns its ID; save it locally before creating additional wallets.
+
+The current integration creates an EOA on `ARC-TESTNET`. It does not fund the wallet, transfer USDC, or deliver a product.
 
 ## Testnet disclaimer
 
@@ -82,6 +97,7 @@ ArcPay is demonstration software. Network metrics and AI-agent analytics shown i
 - [x] Arc-themed landing page and commerce demo
 - [x] Wallet connection, balance, checkout, bridge, and order history
 - [x] Reusable component architecture
+- [x] Circle developer-controlled Arc Testnet wallet backend
 - [ ] Connect dashboard metrics to live Arc data
 - [ ] Implement Vyper payment-policy contracts
 - [ ] Add ERC-8004-compatible agent identity and reputation
