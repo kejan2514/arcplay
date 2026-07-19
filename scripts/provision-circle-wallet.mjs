@@ -31,9 +31,14 @@ if (!wallet?.id || !wallet.address) {
 
 const currentEnv = existsSync(envPath) ? readFileSync(envPath, "utf8") : "";
 const walletSetLine = `CIRCLE_WALLET_SET_ID=${walletSetId}`;
-const nextEnv = /^CIRCLE_WALLET_SET_ID=.*$/m.test(currentEnv)
+let nextEnv = /^CIRCLE_WALLET_SET_ID=.*$/m.test(currentEnv)
   ? currentEnv.replace(/^CIRCLE_WALLET_SET_ID=.*$/m, walletSetLine)
   : `${currentEnv.trimEnd()}\n${walletSetLine}\n`;
+for (const [key, value] of [["CIRCLE_WALLET_ID", wallet.id], ["CIRCLE_WALLET_ADDRESS", wallet.address]]) {
+  const line = `${key}=${value}`;
+  const pattern = new RegExp(`^${key}=.*$`, "m");
+  nextEnv = pattern.test(nextEnv) ? nextEnv.replace(pattern, line) : `${nextEnv.trimEnd()}\n${line}\n`;
+}
 
 writeFileSync(envPath, nextEnv, { mode: 0o600 });
 writeFileSync(".circle-wallet.json", JSON.stringify({

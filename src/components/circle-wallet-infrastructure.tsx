@@ -6,6 +6,9 @@ type CircleStatus = {
   configured: boolean;
   blockchain: string;
   walletSetConfigured: boolean;
+  walletSetId: string | null;
+  walletConfigured: boolean;
+  walletAddress: string | null;
 };
 
 type CreatedWallet = {
@@ -15,6 +18,8 @@ type CreatedWallet = {
   accountType?: string;
 };
 
+type TokenBalance = { amount: string; symbol?: string; tokenId?: string };
+
 function shortAddress(address: string) {
   return `${address.slice(0, 10)}…${address.slice(-8)}`;
 }
@@ -23,15 +28,34 @@ export default function CircleWalletInfrastructure() {
   const [status, setStatus] = useState<CircleStatus | null>(null);
   const [wallet, setWallet] = useState<CreatedWallet | null>(null);
   const [walletSetId, setWalletSetId] = useState("");
+  const [balances, setBalances] = useState<TokenBalance[]>([]);
   const [message, setMessage] = useState("");
   const [creating, setCreating] = useState(false);
+
+  async function loadWallet() {
+    const response = await fetch("/api/circle/wallets", { cache: "no-store" });
+    const data = await response.json() as { wallet?: CreatedWallet; balances?: TokenBalance[]; error?: string };
+    if (!response.ok || !data.wallet) throw new Error(data.error || "Wallet could not be loaded.");
+    setWallet(data.wallet);
+    setBalances(data.balances ?? []);
+  }
 
   useEffect(() => {
     fetch("/api/circle/status")
       .then((response) => response.json() as Promise<CircleStatus>)
-      .then(setStatus)
+      .then((nextStatus) => {
+        setStatus(nextStatus);
+        setWalletSetId(nextStatus.walletSetId ?? "");
+        if (nextStatus.walletConfigured) return loadWallet();
+      })
       .catch(() => setMessage("Circle configuration status could not be loaded."));
   }, []);
+
+  async function copyWalletAddress() {
+    if (!wallet?.address) return;
+    await navigator.clipboard.writeText(wallet.address);
+    setMessage("Wallet address copied. Paste it into Circle Faucet and select Arc Testnet.");
+  }
 
   async function createWallet() {
     setCreating(true);
@@ -90,7 +114,7 @@ export default function CircleWalletInfrastructure() {
               ))}
             </div>
             <button type="button" onClick={createWallet} disabled={!configured || creating} className="mt-6 w-full rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50">
-              {!configured ? "Add Circle credentials to continue" : creating ? "Creating wallet securely…" : "Create Arc Testnet wallet"}
+              {!configured ? "Add Circle credentials to continue" : wallet ? "Circle wallet ready" : creating ? "Creating wallet securely…" : "Create Arc Testnet wallet"}
             </button>
             {message ? <p className="mt-4 text-sm leading-6 text-slate-300" role="status">{message}</p> : null}
           </div>
@@ -102,12 +126,14 @@ export default function CircleWalletInfrastructure() {
                 <div><dt className="text-slate-500">Address</dt><dd className="mt-1 font-mono text-white" title={wallet.address}>{shortAddress(wallet.address)}</dd></div>
                 <div><dt className="text-slate-500">Network</dt><dd className="mt-1 text-white">{wallet.blockchain}</dd></div>
                 <div><dt className="text-slate-500">Account</dt><dd className="mt-1 text-white">{wallet.accountType || "EOA"}</dd></div>
+                <div><dt className="text-slate-500">Test USDC balance</dt><dd className="mt-1 text-xl font-bold text-emerald-300">{balances.find((item) => item.symbol === "USDC")?.amount ?? "0"} USDC</dd></div>
                 <div><dt className="text-slate-500">Wallet set ID</dt><dd className="mt-1 break-all font-mono text-xs text-cyan-200">{walletSetId}</dd></div>
               </dl>
             ) : (
               <div className="mt-5 rounded-2xl border border-dashed border-slate-700 px-5 py-8 text-center text-sm leading-6 text-slate-500">No Circle wallet has been created in this session.</div>
             )}
-            <p className="mt-5 text-xs leading-5 text-slate-500">Testnet only. Creating a wallet does not fund it or execute a payment.</p>
+            {wallet ? <div className="mt-5 grid gap-3 sm:grid-cols-3"><button type="button" onClick={copyWalletAddress} className="rounded-full border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:border-cyan-400">Copy address</button><a href="https://faucet.circle.com" target="_blank" rel="noreferrer" className="rounded-full bg-emerald-400 px-4 py-2.5 text-center text-sm font-semibold text-slate-950 hover:bg-emerald-300">Open Circle Faucet</a><button type="button" onClick={() => void loadWallet()} className="rounded-full border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:border-cyan-400">Refresh balance</button></div> : null}
+            <p className="mt-5 text-xs leading-5 text-slate-500">Testnet only. Faucet tokens have no monetary value and no product is delivered.</p>
           </aside>
         </div>
       </div>

@@ -11,6 +11,31 @@ function safeErrorMessage(error: unknown) {
   return "Circle could not create the Arc Testnet wallet. Check the server configuration and Circle Console.";
 }
 
+export async function GET() {
+  const { walletId, walletAddress } = getCircleConfiguration();
+
+  if (!isCircleConfigured() || !walletId || !walletAddress) {
+    return NextResponse.json({ error: "Circle wallet is not provisioned." }, { status: 503 });
+  }
+
+  try {
+    const response = await getCircleClient().getWalletTokenBalance({ id: walletId, includeAll: true });
+    const balances = response.data?.tokenBalances ?? [];
+
+    return NextResponse.json({
+      wallet: { id: walletId, address: walletAddress, blockchain: CIRCLE_BLOCKCHAIN, accountType: "EOA" },
+      balances: balances.map((balance) => ({
+        amount: balance.amount,
+        symbol: balance.token?.symbol,
+        tokenId: balance.token?.id,
+      })),
+    });
+  } catch (error) {
+    console.error("Circle wallet lookup failed", error);
+    return NextResponse.json({ error: "Circle wallet balance could not be loaded." }, { status: 502 });
+  }
+}
+
 export async function POST() {
   if (!isCircleConfigured()) {
     return NextResponse.json(

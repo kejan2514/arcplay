@@ -4,11 +4,14 @@ import { CIRCLE_BLOCKCHAIN, getCircleConfiguration, isCircleConfigured } from "@
 export const runtime = "nodejs";
 
 export function GET() {
-  const { walletSetId } = getCircleConfiguration();
+  const { walletSetId, walletId, walletAddress } = getCircleConfiguration();
 
   return NextResponse.json({
     configured: isCircleConfigured(),
     blockchain: CIRCLE_BLOCKCHAIN,
     walletSetConfigured: Boolean(walletSetId),
+    walletSetId: walletSetId || null,
+    walletConfigured: Boolean(walletId && walletAddress),
+    walletAddress: walletAddress || null,
   });
 }

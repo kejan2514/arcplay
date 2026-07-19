@@ -9,6 +9,8 @@ export function getCircleConfiguration() {
     apiKey: process.env.CIRCLE_API_KEY,
     entitySecret: process.env.CIRCLE_ENTITY_SECRET,
     walletSetId: process.env.CIRCLE_WALLET_SET_ID,
+    walletId: process.env.CIRCLE_WALLET_ID,
+    walletAddress: process.env.CIRCLE_WALLET_ADDRESS,
   };
 }
 

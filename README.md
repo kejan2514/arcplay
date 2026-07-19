@@ -82,6 +82,8 @@ Copy `.env.example` to `.env.local`, then add credentials created in Circle Cons
 CIRCLE_API_KEY=your_api_key
 CIRCLE_ENTITY_SECRET=your_registered_entity_secret
 CIRCLE_WALLET_SET_ID=optional_existing_wallet_set_id
+CIRCLE_WALLET_ID=provisioned_wallet_id
+CIRCLE_WALLET_ADDRESS=provisioned_wallet_address
 ```
 
 After adding only `CIRCLE_API_KEY`, register an entity secret without printing it:
@@ -100,7 +102,7 @@ npm run circle:provision-wallet
 
 These values are server-only. Never add a `NEXT_PUBLIC_` prefix, paste them into browser code, commit `.env.local`, or share them in screenshots. If `CIRCLE_WALLET_SET_ID` is omitted, the first wallet request creates a wallet set and returns its ID; save it locally before creating additional wallets.
 
-The current integration creates an EOA on `ARC-TESTNET`. It does not fund the wallet, transfer USDC, or deliver a product.
+The current integration creates an EOA on `ARC-TESTNET`, reads its token balance, and links to the official Circle Faucet for manual test USDC funding. It does not transfer real USDC or deliver a product.
 
 ## Testnet disclaimer
 
