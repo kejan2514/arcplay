@@ -1,6 +1,7 @@
 import AIAgentDashboard from "@/components/ai-agent-dashboard";
 import CircleWalletInfrastructure from "@/components/circle-wallet-infrastructure";
 import DeveloperStack from "@/components/developer-stack";
+import EcosystemIntegrations from "@/components/ecosystem-integrations";
 import Footer from "@/components/footer";
 import GameGrid from "@/components/game-grid";
 import Hero from "@/components/hero";
@@ -16,6 +17,7 @@ export default function Home() {
       <LiveArcNetwork />
       <CircleWalletInfrastructure />
       <DeveloperStack />
+      <EcosystemIntegrations />
       <GameGrid />
       <Footer />
     </main>
