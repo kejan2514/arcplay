@@ -49,27 +49,51 @@ export default function EcosystemIntegrations() {
               </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-2.5">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {category.projects.map((item) => (
-                <a
+                <div
                   key={`${category.id}-${item.handle}`}
-                  href={`https://x.com/${item.handle}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="group inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm font-medium text-slate-200 transition hover:-translate-y-0.5 hover:border-cyan-400/60 hover:text-cyan-200"
-                  aria-label={`${item.name} official X profile`}
+                  className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3.5 transition hover:border-cyan-400/35"
                 >
-                  <span>{item.name}</span>
-                  {item.status === "available" ? (
-                    <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-                      Ready
-                    </span>
-                  ) : (
-                    <span className="text-slate-600 transition group-hover:text-cyan-300">
-                      ↗
-                    </span>
-                  )}
-                </a>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-slate-100">{item.name}</p>
+                      <p className="mt-0.5 truncate text-xs text-slate-500">@{item.handle}</p>
+                    </div>
+                    {item.status === "available" && (
+                      <span className="rounded-full bg-emerald-400/15 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-300">
+                        Ready
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <a
+                      href={`https://x.com/${item.handle}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-lg border border-slate-700 px-3 py-2 text-center text-xs font-semibold text-slate-300 transition hover:border-slate-500 hover:text-white"
+                      aria-label={`${item.name} official X profile`}
+                    >
+                      X profile ↗
+                    </a>
+                    {item.website ? (
+                      <a
+                        href={item.website}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg border border-cyan-400/35 bg-cyan-400/10 px-3 py-2 text-center text-xs font-semibold text-cyan-200 transition hover:border-cyan-300 hover:bg-cyan-400/15"
+                        aria-label={`Open ${item.name} application`}
+                      >
+                        Open app ↗
+                      </a>
+                    ) : (
+                      <span className="cursor-not-allowed rounded-lg border border-slate-800 px-3 py-2 text-center text-xs font-semibold text-slate-600">
+                        App coming soon
+                      </span>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           </article>
@@ -84,4 +108,3 @@ export default function EcosystemIntegrations() {
     </section>
   );
 }
-

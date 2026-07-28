@@ -9,6 +9,7 @@ export type EcosystemCategory = {
 export type EcosystemProject = {
   name: string;
   handle: string;
+  website?: string;
   status: "available" | "explore";
 };
 
@@ -16,7 +17,8 @@ const project = (
   name: string,
   handle: string,
   status: EcosystemProject["status"] = "explore",
-): EcosystemProject => ({ name, handle, status });
+  website?: string,
+): EcosystemProject => ({ name, handle, status, website });
 
 export const ECOSYSTEM_CATEGORIES: EcosystemCategory[] = [
   {
@@ -25,12 +27,12 @@ export const ECOSYSTEM_CATEGORIES: EcosystemCategory[] = [
     description: "Move assets between Arc and connected ecosystems.",
     icon: "↔",
     projects: [
-      project("Across", "AcrossProtocol"),
-      project("Stargate", "StargateFinance"),
-      project("LI.FI", "lifiprotocol"),
-      project("Relay", "RelayProtocol"),
-      project("Gas.zip", "gasdotzip"),
-      project("LayerZero", "LayerZero_Core"),
+      project("Across", "AcrossProtocol", "explore", "https://app.across.to/"),
+      project("Stargate", "StargateFinance", "explore", "https://stargate.finance/transfer"),
+      project("LI.FI", "lifiprotocol", "explore", "https://jumper.exchange/"),
+      project("Relay", "RelayProtocol", "explore", "https://relay.link/bridge"),
+      project("Gas.zip", "gasdotzip", "explore", "https://www.gas.zip/"),
+      project("LayerZero", "LayerZero_Core", "explore", "https://layerzero.network/"),
     ],
   },
   {
@@ -40,7 +42,7 @@ export const ECOSYSTEM_CATEGORIES: EcosystemCategory[] = [
     icon: "↗",
     projects: [
       project("Flutch", "Flutchdotfun"),
-      project("AstraPump", "AstraPump"),
+      project("AstraPump", "AstraPump", "explore", "https://astrapump.org/"),
       project("Warp on Arc", "warponarc"),
       project("Act Fun", "actfunxyz"),
       project("Sharc Fun", "SharcFun"),
@@ -54,16 +56,16 @@ export const ECOSYSTEM_CATEGORIES: EcosystemCategory[] = [
     icon: "⇄",
     projects: [
       project("ArcSwap", "arcswapexchenge"),
-      project("Oku", "okutrade"),
-      project("Uniswap", "Uniswap"),
-      project("Odos", "odosprotocol"),
-      project("1inch", "1inch"),
+      project("Oku", "okutrade", "explore", "https://oku.trade/"),
+      project("Uniswap", "Uniswap", "explore", "https://app.uniswap.org/"),
+      project("Odos", "odosprotocol", "explore", "https://app.odos.xyz/"),
+      project("1inch", "1inch", "explore", "https://app.1inch.io/"),
       project("ArcDEXScan", "ArcDEXScan"),
       project("Tower Exchange", "TowerExchange"),
-      project("Curve", "CurveFinance"),
-      project("Balancer", "Balancer"),
-      project("CoW Swap", "CoWSwap"),
-      project("OpenOcean", "OpenOceanGlobal"),
+      project("Curve", "CurveFinance", "explore", "https://curve.finance/"),
+      project("Balancer", "Balancer", "explore", "https://balancer.fi/"),
+      project("CoW Swap", "CoWSwap", "explore", "https://swap.cow.fi/"),
+      project("OpenOcean", "OpenOceanGlobal", "explore", "https://app.openocean.finance/"),
     ],
   },
   {
@@ -72,11 +74,11 @@ export const ECOSYSTEM_CATEGORIES: EcosystemCategory[] = [
     description: "Research stablecoin lending, yield and onchain finance tools.",
     icon: "%",
     projects: [
-      project("Morpho", "Morpho"),
-      project("Pendle", "pendle_fi"),
-      project("Ethena", "ethena"),
-      project("Lido", "LidoFinance"),
-      project("Ondo", "OndoFinance"),
+      project("Morpho", "Morpho", "explore", "https://app.morpho.org/"),
+      project("Pendle", "pendle_fi", "explore", "https://app.pendle.finance/"),
+      project("Ethena", "ethena", "explore", "https://app.ethena.fi/"),
+      project("Lido", "LidoFinance", "explore", "https://stake.lido.fi/"),
+      project("Ondo", "OndoFinance", "explore", "https://ondo.finance/"),
       project("Xylon", "Xylonet_"),
       project("Lunex", "lunexfinance"),
       project("ACH Protocol", "AchProtocol"),
@@ -111,12 +113,11 @@ export const ECOSYSTEM_CATEGORIES: EcosystemCategory[] = [
     description: "Connect to ArcPay or explore other entry points to Arc.",
     icon: "▣",
     projects: [
-      project("Circle Wallets", "circle", "available"),
+      project("Circle Wallets", "circle", "available", "https://console.circle.com/wallets"),
       project("Arc Wallet", "wallet", "available"),
-      project("MetaMask", "MetaMask", "available"),
-      project("Rabby", "Rabby_io"),
-      project("Trust Wallet", "TrustWallet"),
+      project("MetaMask", "MetaMask", "available", "https://portfolio.metamask.io/"),
+      project("Rabby", "Rabby_io", "explore", "https://rabby.io/"),
+      project("Trust Wallet", "TrustWallet", "explore", "https://wallet.trustwallet.com/"),
     ],
   },
 ];
-
