@@ -7,12 +7,14 @@ const totalProjects = ECOSYSTEM_CATEGORIES.reduce(
 
 const supportStyles = {
   verified: "border-emerald-400/25 bg-emerald-400/10 text-emerald-300",
+  "api-listed": "border-sky-400/25 bg-sky-400/10 text-sky-300",
   unconfirmed: "border-amber-400/25 bg-amber-400/10 text-amber-200",
   unavailable: "border-rose-400/25 bg-rose-400/10 text-rose-300",
 } as const;
 
 const supportLabels = {
   verified: "Arc verified",
+  "api-listed": "API listed · UI unavailable",
   unconfirmed: "Support unconfirmed",
   unavailable: "Arc unavailable",
 } as const;
@@ -109,6 +111,10 @@ export default function EcosystemIntegrations() {
                       >
                         Visit site ↗
                       </a>
+                    ) : item.arcSupport === "api-listed" ? (
+                      <span className="cursor-not-allowed rounded-lg border border-sky-400/20 bg-sky-400/[0.06] px-3 py-2 text-center text-xs font-semibold text-sky-300/70">
+                        Jumper unavailable
+                      </span>
                     ) : item.arcSupport === "unavailable" ? (
                       <span className="cursor-not-allowed rounded-lg border border-rose-400/15 bg-rose-400/[0.04] px-3 py-2 text-center text-xs font-semibold text-rose-300/60">
                         Arc unavailable
@@ -127,7 +133,8 @@ export default function EcosystemIntegrations() {
       </div>
 
       <div className="mt-6 rounded-2xl border border-amber-400/20 bg-amber-400/[0.06] px-5 py-4 text-sm leading-6 text-amber-100/80">
-        Only projects marked Arc verified have confirmed Arc support. External
+        Only projects marked Arc verified have confirmed usable Arc support.
+        “API listed” does not mean that Arc is selectable in the app. External
         protocols are not embedded into ArcPay transactions; always verify the
         selected network, token contract and quote before signing.
       </div>

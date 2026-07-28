@@ -11,7 +11,7 @@ export type EcosystemProject = {
   handle: string;
   website?: string;
   status: "available" | "explore";
-  arcSupport: "verified" | "unconfirmed" | "unavailable";
+  arcSupport: "verified" | "api-listed" | "unconfirmed" | "unavailable";
 };
 
 const project = (
@@ -31,7 +31,7 @@ export const ECOSYSTEM_CATEGORIES: EcosystemCategory[] = [
     projects: [
       project("Across", "AcrossProtocol", "explore", "https://app.across.to/", "unavailable"),
       project("Stargate", "StargateFinance", "explore", "https://stargate.finance/transfer", "unavailable"),
-      project("LI.FI", "lifiprotocol", "explore", "https://jumper.exchange/", "verified"),
+      project("LI.FI", "lifiprotocol", "explore", "https://jumper.exchange/", "api-listed"),
       project("Relay", "RelayProtocol", "explore", "https://relay.link/bridge", "unavailable"),
       project("Gas.zip", "gasdotzip", "explore", "https://www.gas.zip/"),
       project("LayerZero", "LayerZero_Core", "explore", "https://layerzero.network/"),
