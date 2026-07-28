@@ -11,6 +11,7 @@ export type EcosystemProject = {
   handle: string;
   website?: string;
   status: "available" | "explore";
+  arcSupport: "verified" | "unconfirmed" | "unavailable";
 };
 
 const project = (
@@ -18,7 +19,8 @@ const project = (
   handle: string,
   status: EcosystemProject["status"] = "explore",
   website?: string,
-): EcosystemProject => ({ name, handle, status, website });
+  arcSupport: EcosystemProject["arcSupport"] = "unconfirmed",
+): EcosystemProject => ({ name, handle, status, website, arcSupport });
 
 export const ECOSYSTEM_CATEGORIES: EcosystemCategory[] = [
   {
@@ -27,10 +29,10 @@ export const ECOSYSTEM_CATEGORIES: EcosystemCategory[] = [
     description: "Move assets between Arc and connected ecosystems.",
     icon: "↔",
     projects: [
-      project("Across", "AcrossProtocol", "explore", "https://app.across.to/"),
-      project("Stargate", "StargateFinance", "explore", "https://stargate.finance/transfer"),
-      project("LI.FI", "lifiprotocol", "explore", "https://jumper.exchange/"),
-      project("Relay", "RelayProtocol", "explore", "https://relay.link/bridge"),
+      project("Across", "AcrossProtocol", "explore", "https://app.across.to/", "unavailable"),
+      project("Stargate", "StargateFinance", "explore", "https://stargate.finance/transfer", "unavailable"),
+      project("LI.FI", "lifiprotocol", "explore", "https://jumper.exchange/", "verified"),
+      project("Relay", "RelayProtocol", "explore", "https://relay.link/bridge", "unavailable"),
       project("Gas.zip", "gasdotzip", "explore", "https://www.gas.zip/"),
       project("LayerZero", "LayerZero_Core", "explore", "https://layerzero.network/"),
     ],
@@ -113,9 +115,9 @@ export const ECOSYSTEM_CATEGORIES: EcosystemCategory[] = [
     description: "Connect to ArcPay or explore other entry points to Arc.",
     icon: "▣",
     projects: [
-      project("Circle Wallets", "circle", "available", "https://console.circle.com/wallets"),
+      project("Circle Wallets", "circle", "available", "https://console.circle.com/wallets", "verified"),
       project("Arc Wallet", "wallet", "available"),
-      project("MetaMask", "MetaMask", "available", "https://portfolio.metamask.io/"),
+      project("MetaMask", "MetaMask", "available", "https://portfolio.metamask.io/", "verified"),
       project("Rabby", "Rabby_io", "explore", "https://rabby.io/"),
       project("Trust Wallet", "TrustWallet", "explore", "https://wallet.trustwallet.com/"),
     ],

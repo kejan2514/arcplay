@@ -5,6 +5,18 @@ const totalProjects = ECOSYSTEM_CATEGORIES.reduce(
   0,
 );
 
+const supportStyles = {
+  verified: "border-emerald-400/25 bg-emerald-400/10 text-emerald-300",
+  unconfirmed: "border-amber-400/25 bg-amber-400/10 text-amber-200",
+  unavailable: "border-rose-400/25 bg-rose-400/10 text-rose-300",
+} as const;
+
+const supportLabels = {
+  verified: "Arc verified",
+  unconfirmed: "Support unconfirmed",
+  unavailable: "Arc unavailable",
+} as const;
+
 export default function EcosystemIntegrations() {
   return (
     <section
@@ -60,11 +72,11 @@ export default function EcosystemIntegrations() {
                       <p className="truncate font-semibold text-slate-100">{item.name}</p>
                       <p className="mt-0.5 truncate text-xs text-slate-500">@{item.handle}</p>
                     </div>
-                    {item.status === "available" && (
-                      <span className="rounded-full bg-emerald-400/15 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-300">
-                        Ready
-                      </span>
-                    )}
+                    <span
+                      className={`rounded-full border px-2 py-1 text-[9px] font-bold uppercase tracking-wider ${supportStyles[item.arcSupport]}`}
+                    >
+                      {supportLabels[item.arcSupport]}
+                    </span>
                   </div>
 
                   <div className="mt-3 grid grid-cols-2 gap-2">
@@ -77,7 +89,7 @@ export default function EcosystemIntegrations() {
                     >
                       X profile ↗
                     </a>
-                    {item.website ? (
+                    {item.website && item.arcSupport === "verified" ? (
                       <a
                         href={item.website}
                         target="_blank"
@@ -85,8 +97,22 @@ export default function EcosystemIntegrations() {
                         className="rounded-lg border border-cyan-400/35 bg-cyan-400/10 px-3 py-2 text-center text-xs font-semibold text-cyan-200 transition hover:border-cyan-300 hover:bg-cyan-400/15"
                         aria-label={`Open ${item.name} application`}
                       >
-                        Open app ↗
+                        Use on Arc ↗
                       </a>
+                    ) : item.website && item.arcSupport === "unconfirmed" ? (
+                      <a
+                        href={item.website}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg border border-amber-400/20 bg-amber-400/[0.06] px-3 py-2 text-center text-xs font-semibold text-amber-200/80 transition hover:border-amber-300/40"
+                        aria-label={`Visit ${item.name} website; Arc support is unconfirmed`}
+                      >
+                        Visit site ↗
+                      </a>
+                    ) : item.arcSupport === "unavailable" ? (
+                      <span className="cursor-not-allowed rounded-lg border border-rose-400/15 bg-rose-400/[0.04] px-3 py-2 text-center text-xs font-semibold text-rose-300/60">
+                        Arc unavailable
+                      </span>
                     ) : (
                       <span className="cursor-not-allowed rounded-lg border border-slate-800 px-3 py-2 text-center text-xs font-semibold text-slate-600">
                         App coming soon
@@ -101,9 +127,9 @@ export default function EcosystemIntegrations() {
       </div>
 
       <div className="mt-6 rounded-2xl border border-amber-400/20 bg-amber-400/[0.06] px-5 py-4 text-sm leading-6 text-amber-100/80">
-        Community directory, not an endorsement. External protocols are not yet
-        connected to ArcPay transactions; verify contracts, network support and
-        risk before using them.
+        Only projects marked Arc verified have confirmed Arc support. External
+        protocols are not embedded into ArcPay transactions; always verify the
+        selected network, token contract and quote before signing.
       </div>
     </section>
   );
