@@ -6,6 +6,7 @@ import Footer from "@/components/footer";
 import GameGrid from "@/components/game-grid";
 import Hero from "@/components/hero";
 import LiveArcNetwork from "@/components/live-arc-network";
+import USDCBridge from "@/components/usdc-bridge";
 import WorkflowBuilder from "@/components/workflow-builder";
 
 export default function Home() {
@@ -15,6 +16,7 @@ export default function Home() {
       <AIAgentDashboard />
       <WorkflowBuilder />
       <LiveArcNetwork />
+      <USDCBridge />
       <CircleWalletInfrastructure />
       <DeveloperStack />
       <EcosystemIntegrations />
