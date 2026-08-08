@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AppKit } from "@circle-fin/app-kit";
+import { BridgeKit } from "@circle-fin/bridge-kit";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
 import type { EIP1193Provider } from "viem";
 
@@ -30,7 +30,7 @@ function short(address: string) {
 }
 
 export default function USDCBridge() {
-  const kit = useMemo(() => new AppKit(), []);
+  const kit = useMemo(() => new BridgeKit(), []);
   const [wallet, setWallet] = useState<ProviderDetail | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [amount, setAmount] = useState("1.00");
@@ -92,10 +92,10 @@ export default function USDCBridge() {
       });
 
       if (result.state === "error") {
-        result = await kit.retryBridge(result, { from: adapter, to: adapter });
+        result = await kit.retry(result, { from: adapter, to: adapter });
       }
 
-      const steps = "steps" in result && Array.isArray(result.steps) ? result.steps : [];
+      const steps = Array.isArray(result.steps) ? result.steps : [];
       const lastUrl = [...steps].reverse().map((step: unknown) => {
         const candidate = step as { data?: { explorerUrl?: string }; explorerUrl?: string };
         return candidate.data?.explorerUrl ?? candidate.explorerUrl;
