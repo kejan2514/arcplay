@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "circle:register-secret": "node --env-file=.env.local scripts/register-circle-entity-secret.mjs",
     "circle:provision-wallet": "node --env-file=.env.local scripts/provision-circle-wallet.mjs",
     "circle:sync-wallet": "node scripts/sync-circle-wallet-env.mjs"
