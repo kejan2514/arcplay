@@ -1,8 +1,10 @@
 # ArcPay
 
+[![CI](https://github.com/kejan2514/arcplay/actions/workflows/ci.yml/badge.svg)](https://github.com/kejan2514/arcplay/actions/workflows/ci.yml)
+
 **The Agentic Commerce Layer on Arc.**
 
-ArcPay is an open-source reference demo for agentic commerce on Arc. It combines autonomous payment workflows, wallet connectivity, Circle USDC bridging, a game-credit checkout, and transaction history in one dark, responsive developer experience.
+ArcPay is an open-source reference demo for agentic commerce on Arc. It combines autonomous payment workflows, wallet connectivity, Circle USDC bridging, a game-credit checkout, transaction history, and live Arc Testnet telemetry in one dark, responsive developer experience.
 
 > ArcPay is an experimental testnet project. It is not a production payment service and must not be used with real funds.
 
@@ -13,9 +15,9 @@ ArcPay is an open-source reference demo for agentic commerce on Arc. It combines
 - Wallet connection and testnet USDC balance display
 - Circle Bridge Kit flow for bridging USDC to Arc
 - Server-only Circle developer-controlled wallet integration for Arc Testnet
+- Live Arc Testnet block, chain ID, block age, and RPC latency telemetry
 - Game-credit catalog and PUBG test checkout
 - Local order history for completed demo purchases
-- Arc network and developer-stack showcase
 - Responsive, glassmorphism-based Arc visual theme
 
 ## Architecture
@@ -32,7 +34,7 @@ Wallet / Schedule / Webhook
  Merchant Settlement + Receipt
 ```
 
-The App Router page composes focused sections from `src/components`. Existing interactive wallet, checkout, bridge, balance, and history components remain isolated client components, while the surrounding presentation is server-rendered.
+The App Router page composes focused sections from `src/components`. Existing interactive wallet, checkout, bridge, balance, history, and live-network components remain isolated, while server routes handle Arc RPC and Circle infrastructure concerns.
 
 ## Tech stack
 
@@ -43,6 +45,7 @@ The App Router page composes focused sections from `src/components`. Existing in
 - viem
 - Circle Bridge Kit and Circle viem adapter
 - Arc Testnet and test USDC
+- GitHub Actions CI
 
 The interface also presents Vyper and ERC-8004 as part of the project roadmap and agentic-commerce architecture; they are not yet implemented as production integrations.
 
@@ -57,7 +60,7 @@ The interface also presents Vyper and ERC-8004 as part of the project roadmap an
 ### Run the app
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/kejan2514/arcplay.git
 cd arcplay
 npm install
 npm run dev
@@ -69,10 +72,17 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```bash
 npm run lint
+npm run typecheck
 npm run build
 ```
 
+The same quality checks run in GitHub Actions for pushes and pull requests targeting `main`.
+
 Wallet transactions still require a compatible wallet and testnet funds. The Circle wallet panel works in a safe unconfigured state by default.
+
+### Live Arc Testnet telemetry
+
+The `/api/arc-network` server route reads Arc Testnet using `viem` and exposes the latest block, chain ID, block age, RPC latency, explorer URL, and update time to the dashboard. Set `ARC_TESTNET_RPC_URL` to override the default public Arc Testnet RPC endpoint.
 
 ### Circle developer-controlled wallets
 
@@ -106,7 +116,7 @@ The current integration creates an EOA on `ARC-TESTNET`, reads its token balance
 
 ## Testnet disclaimer
 
-ArcPay is demonstration software. Network metrics and AI-agent analytics shown in the showcase sections are illustrative unless explicitly connected to a live provider. Contract addresses, token details, and wallet prompts must be independently verified before signing. Never send production assets or real USDC to testnet contracts or addresses.
+ArcPay is demonstration software. Live Arc telemetry is read from Arc Testnet, while AI-agent analytics and other showcase metrics may still be illustrative unless explicitly connected to a live provider. Contract addresses, token details, and wallet prompts must be independently verified before signing. Never send production assets or real USDC to testnet contracts or addresses.
 
 ## Roadmap
 
@@ -114,11 +124,12 @@ ArcPay is demonstration software. Network metrics and AI-agent analytics shown i
 - [x] Wallet connection, balance, checkout, bridge, and order history
 - [x] Reusable component architecture
 - [x] Circle developer-controlled Arc Testnet wallet backend
-- [ ] Connect dashboard metrics to live Arc data
+- [x] Connect dashboard metrics to live Arc Testnet telemetry
+- [x] Add CI lint, TypeScript, and production-build gates
 - [ ] Implement Vyper payment-policy contracts
 - [ ] Add ERC-8004-compatible agent identity and reputation
 - [ ] Ship a configurable workflow builder and merchant SDK
-- [ ] Add automated tests and audited production safeguards
+- [ ] Add automated application tests and audited production safeguards
 
 ## License
 
