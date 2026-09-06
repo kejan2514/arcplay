@@ -3,6 +3,8 @@ import { ARC_ERC8004 } from "@/lib/erc8004-arc";
 export const ERC8004_REGISTRATION_TYPE =
   "https://eips.ethereum.org/EIPS/eip-8004#registration-v1";
 
+export const ARCPAY_ERC8004_AGENT_ID = 892445;
+
 export type AgentService = {
   name: string;
   endpoint: string;
@@ -28,14 +30,16 @@ export function buildArcPayAgentRegistration(baseUrl: string): AgentRegistration
   const registryAddress =
     process.env.ERC8004_IDENTITY_REGISTRY_ADDRESS?.trim() ||
     ARC_ERC8004.identityRegistry;
-  const agentId = Number(process.env.ERC8004_AGENT_ID ?? "0");
+  const configuredAgentId = Number(
+    process.env.ERC8004_AGENT_ID ?? ARCPAY_ERC8004_AGENT_ID,
+  );
   const chainId = Number(process.env.NEXT_PUBLIC_ARC_CHAIN_ID ?? ARC_ERC8004.chainId);
 
   const registrations =
-    registryAddress && Number.isSafeInteger(agentId) && agentId > 0
+    registryAddress && Number.isSafeInteger(configuredAgentId) && configuredAgentId > 0
       ? [
           {
-            agentId,
+            agentId: configuredAgentId,
             agentRegistry: `eip155:${chainId}:${registryAddress}`,
           },
         ]
