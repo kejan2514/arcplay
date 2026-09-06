@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { createPublicClient, http } from "viem";
 import { arcTestnet } from "viem/chains";
+import { getArcHealthStatus, isFreshArcBlock } from "@/lib/arc-health";
 
 const ARC_RPC_URL = process.env.ARC_TESTNET_RPC_URL || "https://rpc.testnet.arc.network";
-const STALE_BLOCK_THRESHOLD_SECONDS = 120;
 
 export async function GET() {
   const client = createPublicClient({
@@ -19,12 +19,13 @@ export async function GET() {
     const latencyMs = Date.now() - startedAt;
     const blockTimestampMs = Number(block.timestamp) * 1000;
     const blockAgeSeconds = Math.max(0, Math.round((Date.now() - blockTimestampMs) / 1000));
-    const healthy = blockAgeSeconds <= STALE_BLOCK_THRESHOLD_SECONDS;
+    const status = getArcHealthStatus(blockAgeSeconds);
+    const healthy = status === "ok";
 
     return NextResponse.json(
       {
         service: "ArcPay",
-        status: healthy ? "ok" : "degraded",
+        status,
         network: "Arc Testnet",
         chainId: arcTestnet.id,
         latestBlock: blockNumber.toString(),
@@ -32,7 +33,7 @@ export async function GET() {
         rpcLatencyMs: latencyMs,
         checks: {
           rpcReachable: true,
-          blockFresh: healthy,
+          blockFresh: isFreshArcBlock(blockAgeSeconds),
         },
         updatedAt: new Date().toISOString(),
       },
@@ -47,7 +48,7 @@ export async function GET() {
     return NextResponse.json(
       {
         service: "ArcPay",
-        status: "unavailable",
+        status: getArcHealthStatus(Number.POSITIVE_INFINITY, false),
         network: "Arc Testnet",
         chainId: arcTestnet.id,
         checks: {
