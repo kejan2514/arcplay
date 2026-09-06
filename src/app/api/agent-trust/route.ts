@@ -3,6 +3,7 @@ import { createPublicClient, http, type Address } from "viem";
 import { arcTestnet } from "viem/chains";
 import {
   ARC_ERC8004,
+  ERC8004_IDENTITY_REGISTRY_ABI,
   ERC8004_REPUTATION_REGISTRY_ABI,
   ERC8004_VALIDATION_REGISTRY_ABI,
 } from "@/lib/erc8004-arc";
@@ -21,7 +22,7 @@ function formatFixedPoint(value: bigint, decimals: number) {
   return negative ? `-${formatted}` : formatted;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const agentId = BigInt(
     Number(process.env.ERC8004_AGENT_ID ?? ARCPAY_ERC8004_AGENT_ID),
   );
@@ -32,6 +33,23 @@ export async function GET() {
   });
 
   try {
+    const [owner, tokenURI] = await Promise.all([
+      client.readContract({
+        address: ARC_ERC8004.identityRegistry as Address,
+        abi: ERC8004_IDENTITY_REGISTRY_ABI,
+        functionName: "ownerOf",
+        args: [agentId],
+      }),
+      client.readContract({
+        address: ARC_ERC8004.identityRegistry as Address,
+        abi: ERC8004_IDENTITY_REGISTRY_ABI,
+        functionName: "tokenURI",
+        args: [agentId],
+      }),
+    ]);
+
+    const expectedRegistrationURI = `${new URL(request.url).origin}/api/agent-registration`;
+
     const clients = await client.readContract({
       address: ARC_ERC8004.reputationRegistry as Address,
       abi: ERC8004_REPUTATION_REGISTRY_ABI,
@@ -83,6 +101,13 @@ export async function GET() {
         network: ARC_ERC8004.network,
         chainId: ARC_ERC8004.chainId,
         agentId: Number(agentId),
+        identity: {
+          owner,
+          tokenURI,
+          expectedRegistrationURI,
+          uriMatches: tokenURI === expectedRegistrationURI,
+          registry: ARC_ERC8004.identityRegistry,
+        },
         reputation,
         validation: {
           count: Number(validationCount),
@@ -90,6 +115,7 @@ export async function GET() {
           requestCount: requestHashes.length,
         },
         registries: {
+          identity: ARC_ERC8004.identityRegistry,
           reputation: ARC_ERC8004.reputationRegistry,
           validation: ARC_ERC8004.validationRegistry,
         },
@@ -104,7 +130,7 @@ export async function GET() {
         network: ARC_ERC8004.network,
         chainId: ARC_ERC8004.chainId,
         agentId: Number(agentId),
-        error: error instanceof Error ? error.message : "Unable to read ERC-8004 trust registries",
+        error: error instanceof Error ? error.message : "Unable to read ERC-8004 registries",
         updatedAt: new Date().toISOString(),
       },
       { status: 503, headers: { "Cache-Control": "no-store" } },
