@@ -1,10 +1,12 @@
 import ERC8004RegisterAgent from "@/components/erc8004-register-agent";
+import ERC8004TrustStatus from "@/components/erc8004-trust-status";
 import { ARC_ERC8004 } from "@/lib/erc8004-arc";
+import { ARCPAY_ERC8004_AGENT_ID } from "@/lib/erc8004";
 
 const trustModels = [
-  { title: "Identity", body: "Portable agent metadata shaped for ERC-8004 registration files." },
-  { title: "Reputation", body: "Arc Testnet ReputationRegistry is wired as an official trust surface without inventing scores." },
-  { title: "Validation", body: "Arc Testnet ValidationRegistry is configured for future independent validation evidence." },
+  { title: "Identity", body: "ArcPay now carries a confirmed ERC-8004 Agent ID on Arc Testnet." },
+  { title: "Reputation", body: "Live ReputationRegistry reads expose only real onchain feedback signals." },
+  { title: "Validation", body: "Live ValidationRegistry reads expose real requests and responses without synthetic scores." },
 ];
 
 const registries = [
@@ -20,9 +22,9 @@ export default function ERC8004AgentIdentity() {
         <div className="flex flex-col gap-4 border-b border-slate-800 pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-300">ERC-8004 Agent Identity</p>
-            <h2 className="mt-2 text-3xl font-bold text-white">ArcPay is wired to the official ERC-8004 registries on Arc Testnet.</h2>
+            <h2 className="mt-2 text-3xl font-bold text-white">ArcPay is registered with the official ERC-8004 IdentityRegistry on Arc Testnet.</h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400 sm:text-base">
-              The registration endpoint follows the ERC-8004 registration-v1 shape and the app now carries the official Arc Testnet Identity, Reputation, and Validation registry addresses. ArcPay still does not claim an agent ID until a real onchain registration is completed.
+              Agent ID {ARCPAY_ERC8004_AGENT_ID} is the confirmed ArcPay identity. The public registration document advertises the official Arc Testnet registry identifier, while reputation and validation panels read the trust registries directly from Arc.
             </p>
           </div>
           <a
@@ -61,10 +63,11 @@ export default function ERC8004AgentIdentity() {
           </div>
         </div>
 
-        <ERC8004RegisterAgent />
+        <ERC8004RegisterAgent existingAgentId={ARCPAY_ERC8004_AGENT_ID} />
+        <ERC8004TrustStatus />
 
         <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 text-sm leading-7 text-slate-400">
-          <span className="font-semibold text-slate-200">Safety:</span> official registry addresses are configured, but ArcPay only publishes a registration entry after a real agent ID is supplied from an onchain registration.
+          <span className="font-semibold text-slate-200">Trust model:</span> identity is confirmed onchain; reputation and validation values are displayed only when they are returned by the official Arc Testnet registries.
         </div>
       </div>
     </section>
