@@ -4,7 +4,7 @@
 
 **The Agentic Commerce Layer on Arc.**
 
-ArcPay is an open-source reference demo for agentic commerce on Arc. It combines autonomous payment workflows, wallet connectivity, Circle USDC bridging, a game-credit checkout, transaction history, and live Arc Testnet telemetry in one dark, responsive developer experience.
+ArcPay is an open-source reference demo for agentic commerce on Arc. It combines autonomous payment workflows, wallet connectivity, Circle USDC bridging, a game-credit checkout, transaction history, live Arc Testnet telemetry, and an ERC-8004-compatible agent registration profile in one dark, responsive developer experience.
 
 > ArcPay is an experimental testnet project. It is not a production payment service and must not be used with real funds.
 
@@ -12,6 +12,7 @@ ArcPay is an open-source reference demo for agentic commerce on Arc. It combines
 
 - Agentic workflow visualization from trigger to settlement
 - AI agent status, reputation, and analytics dashboard
+- ERC-8004 registration-v1 compatible agent identity metadata
 - Wallet connection and testnet USDC balance display
 - Circle Bridge Kit flow for bridging USDC to Arc
 - Server-only Circle developer-controlled wallet integration for Arc Testnet
@@ -28,6 +29,8 @@ Wallet / Schedule / Webhook
             ↓
          AI Agent
             ↓
+ ERC-8004 Identity + Trust
+            ↓
    Payment Workflow Rules
             ↓
  Arc Testnet + Circle USDC
@@ -35,7 +38,7 @@ Wallet / Schedule / Webhook
  Merchant Settlement + Receipt
 ```
 
-The App Router page composes focused sections from `src/components`. Existing interactive wallet, checkout, bridge, balance, history, and live-network components remain isolated, while server routes handle Arc RPC and Circle infrastructure concerns.
+The App Router page composes focused sections from `src/components`. Existing interactive wallet, checkout, bridge, balance, history, identity, and live-network components remain isolated, while server routes handle Arc RPC, agent metadata, and Circle infrastructure concerns.
 
 ## Tech stack
 
@@ -45,10 +48,11 @@ The App Router page composes focused sections from `src/components`. Existing in
 - Tailwind CSS 4
 - viem
 - Circle Bridge Kit and Circle viem adapter
+- ERC-8004 registration metadata
 - Arc Testnet and test USDC
 - GitHub Actions CI
 
-The interface also presents Vyper and ERC-8004 as part of the project roadmap and agentic-commerce architecture; they are not yet implemented as production integrations.
+The ERC-8004 integration currently implements the registration metadata and trust-ready UI layer. It does not claim an onchain identity until a verified Identity Registry address and real agent ID are configured.
 
 ## Local setup
 
@@ -72,6 +76,7 @@ Open [http://localhost:3000](http://localhost:3000).
 ### Quality checks
 
 ```bash
+npm test
 npm run lint
 npm run typecheck
 npm run build
@@ -88,6 +93,19 @@ The `/api/arc-network` server route reads Arc Testnet using `viem` and exposes t
 ### Arc health endpoint
 
 The `/api/health` route is designed for deployment probes and uptime checks. It verifies that Arc Testnet RPC is reachable, reads the latest block, measures RPC latency, and marks the service as degraded when the latest block is more than 120 seconds old. Healthy checks return HTTP 200; degraded or unavailable checks return HTTP 503.
+
+### ERC-8004 agent identity
+
+The `/api/agent-registration` route publishes an ERC-8004 registration-v1 shaped document for ArcPay. It exposes the web app, health endpoint, and Arc RPC telemetry as agent services and advertises reputation and validation as supported trust models.
+
+Optional onchain identity fields are server-configured:
+
+```text
+ERC8004_IDENTITY_REGISTRY_ADDRESS=
+ERC8004_AGENT_ID=
+```
+
+Leave both values empty until an actual ERC-8004 Identity Registry deployment is verified on the target chain and ArcPay is genuinely registered there. When configured, ArcPay emits the registry identifier using the `eip155:{chainId}:{identityRegistry}` form.
 
 ### Circle developer-controlled wallets
 
@@ -132,10 +150,12 @@ ArcPay is demonstration software. Live Arc telemetry is read from Arc Testnet, w
 - [x] Connect dashboard metrics to live Arc Testnet telemetry
 - [x] Add CI lint, TypeScript, and production-build gates
 - [x] Add Arc-aware deployment health checks
+- [x] Add ERC-8004-compatible agent registration metadata and trust UI
+- [ ] Connect to a verified ERC-8004 Identity Registry deployment on Arc
+- [ ] Add onchain reputation and validation registry reads
 - [ ] Implement Vyper payment-policy contracts
-- [ ] Add ERC-8004-compatible agent identity and reputation
 - [ ] Ship a configurable workflow builder and merchant SDK
-- [ ] Add automated application tests and audited production safeguards
+- [ ] Expand automated application tests and audited production safeguards
 
 ## License
 
