@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "rm -rf .test-dist && tsc src/lib/arc-health.ts --target ES2022 --module NodeNext --moduleResolution NodeNext --outDir .test-dist --skipLibCheck && node --test tests/arc-health.test.mjs && rm -rf .test-dist",
+    "test": "rm -rf .test-dist && tsc src/lib/arc-health.ts src/lib/erc8004.ts --target ES2022 --module NodeNext --moduleResolution NodeNext --outDir .test-dist --skipLibCheck && node --test tests/arc-health.test.mjs tests/erc8004.test.mjs && rm -rf .test-dist",
     "circle:register-secret": "node --env-file=.env.local scripts/register-circle-entity-secret.mjs",
     "circle:provision-wallet": "node --env-file=.env.local scripts/provision-circle-wallet.mjs",
     "circle:sync-wallet": "node scripts/sync-circle-wallet-env.mjs"
