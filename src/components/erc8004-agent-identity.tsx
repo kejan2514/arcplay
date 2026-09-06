@@ -1,8 +1,16 @@
+import { ARC_ERC8004 } from "@/lib/erc8004-arc";
+
 const trustModels = [
   { title: "Identity", body: "Portable agent metadata shaped for ERC-8004 registration files." },
-  { title: "Reputation", body: "Advertises reputation as a supported trust signal without fabricating scores." },
-  { title: "Validation", body: "Ready to link independent validation evidence when an Arc registry is configured." },
+  { title: "Reputation", body: "Arc Testnet ReputationRegistry is wired as an official trust surface without inventing scores." },
+  { title: "Validation", body: "Arc Testnet ValidationRegistry is configured for future independent validation evidence." },
 ];
+
+const registries = [
+  ["IdentityRegistry", ARC_ERC8004.identityRegistry],
+  ["ReputationRegistry", ARC_ERC8004.reputationRegistry],
+  ["ValidationRegistry", ARC_ERC8004.validationRegistry],
+] as const;
 
 export default function ERC8004AgentIdentity() {
   return (
@@ -11,9 +19,9 @@ export default function ERC8004AgentIdentity() {
         <div className="flex flex-col gap-4 border-b border-slate-800 pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-300">ERC-8004 Agent Identity</p>
-            <h2 className="mt-2 text-3xl font-bold text-white">ArcPay now publishes a trust-ready agent registration profile.</h2>
+            <h2 className="mt-2 text-3xl font-bold text-white">ArcPay is wired to the official ERC-8004 registries on Arc Testnet.</h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400 sm:text-base">
-              The registration endpoint follows the ERC-8004 registration-v1 shape and exposes real ArcPay services. Onchain registry fields stay empty until a verified Arc deployment is configured.
+              The registration endpoint follows the ERC-8004 registration-v1 shape and the app now carries the official Arc Testnet Identity, Reputation, and Validation registry addresses. ArcPay still does not claim an agent ID until a real onchain registration is completed.
             </p>
           </div>
           <a
@@ -40,8 +48,20 @@ export default function ERC8004AgentIdentity() {
           ))}
         </div>
 
-        <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 text-sm leading-7 text-slate-400">
-          <span className="font-semibold text-slate-200">Safety:</span> this integration does not claim an onchain ERC-8004 identity until a real Identity Registry address and agent ID are supplied through server configuration.
+        <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-300">Official Arc Testnet registries</p>
+          <div className="mt-4 space-y-3 text-sm">
+            {registries.map(([name, address]) => (
+              <div key={name} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <span className="font-medium text-slate-200">{name}</span>
+                <code className="break-all text-xs text-slate-400">{address}</code>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 text-sm leading-7 text-slate-400">
+          <span className="font-semibold text-slate-200">Safety:</span> official registry addresses are configured, but ArcPay only publishes a registration entry after a real agent ID is supplied from an onchain registration.
         </div>
       </div>
     </section>
