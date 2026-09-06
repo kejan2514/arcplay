@@ -1,3 +1,4 @@
+import ERC8004RegisterAgent from "@/components/erc8004-register-agent";
 import { ARC_ERC8004 } from "@/lib/erc8004-arc";
 
 const trustModels = [
@@ -59,6 +60,8 @@ export default function ERC8004AgentIdentity() {
             ))}
           </div>
         </div>
+
+        <ERC8004RegisterAgent />
 
         <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 text-sm leading-7 text-slate-400">
           <span className="font-semibold text-slate-200">Safety:</span> official registry addresses are configured, but ArcPay only publishes a registration entry after a real agent ID is supplied from an onchain registration.
