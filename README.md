@@ -16,6 +16,7 @@ ArcPay is an open-source reference demo for agentic commerce on Arc. It combines
 - Circle Bridge Kit flow for bridging USDC to Arc
 - Server-only Circle developer-controlled wallet integration for Arc Testnet
 - Live Arc Testnet block, chain ID, block age, and RPC latency telemetry
+- Arc-aware health endpoint for deployment and uptime monitoring
 - Game-credit catalog and PUBG test checkout
 - Local order history for completed demo purchases
 - Responsive, glassmorphism-based Arc visual theme
@@ -84,6 +85,10 @@ Wallet transactions still require a compatible wallet and testnet funds. The Cir
 
 The `/api/arc-network` server route reads Arc Testnet using `viem` and exposes the latest block, chain ID, block age, RPC latency, explorer URL, and update time to the dashboard. Set `ARC_TESTNET_RPC_URL` to override the default public Arc Testnet RPC endpoint.
 
+### Arc health endpoint
+
+The `/api/health` route is designed for deployment probes and uptime checks. It verifies that Arc Testnet RPC is reachable, reads the latest block, measures RPC latency, and marks the service as degraded when the latest block is more than 120 seconds old. Healthy checks return HTTP 200; degraded or unavailable checks return HTTP 503.
+
 ### Circle developer-controlled wallets
 
 Copy `.env.example` to `.env.local`, then add credentials created in Circle Console:
@@ -126,6 +131,7 @@ ArcPay is demonstration software. Live Arc telemetry is read from Arc Testnet, w
 - [x] Circle developer-controlled Arc Testnet wallet backend
 - [x] Connect dashboard metrics to live Arc Testnet telemetry
 - [x] Add CI lint, TypeScript, and production-build gates
+- [x] Add Arc-aware deployment health checks
 - [ ] Implement Vyper payment-policy contracts
 - [ ] Add ERC-8004-compatible agent identity and reputation
 - [ ] Ship a configurable workflow builder and merchant SDK
