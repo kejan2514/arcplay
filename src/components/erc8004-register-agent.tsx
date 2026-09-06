@@ -49,12 +49,18 @@ async function ensureArcTestnet() {
   }
 }
 
-export default function ERC8004RegisterAgent() {
+export default function ERC8004RegisterAgent({
+  existingAgentId,
+}: {
+  existingAgentId?: number;
+}) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<RegistrationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function registerAgent() {
+    if (existingAgentId) return;
+
     setBusy(true);
     setError(null);
     setResult(null);
@@ -115,6 +121,20 @@ export default function ERC8004RegisterAgent() {
     }
   }
 
+  if (existingAgentId) {
+    return (
+      <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/5 p-5">
+        <p className="text-sm font-semibold text-emerald-300">ArcPay Agent is registered on Arc Testnet.</p>
+        <p className="mt-2 text-sm text-slate-300">
+          Agent ID: <code className="font-semibold text-white">{existingAgentId}</code>
+        </p>
+        <p className="mt-2 text-xs leading-5 text-slate-500">
+          Duplicate registration is disabled in the UI. The public registration JSON now advertises this confirmed onchain identity.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-6 rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -149,9 +169,6 @@ export default function ERC8004RegisterAgent() {
           >
             View transaction on Arcscan ↗
           </a>
-          <p className="mt-3 text-xs leading-5 text-slate-500">
-            After registration, set ERC8004_AGENT_ID to the confirmed Agent ID in the deployment environment so the public registration JSON can advertise the onchain identity.
-          </p>
         </div>
       )}
     </div>
