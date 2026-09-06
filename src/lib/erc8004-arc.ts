@@ -25,6 +25,20 @@ export const ERC8004_IDENTITY_REGISTRY_ABI = [
     outputs: [],
   },
   {
+    type: "function",
+    name: "ownerOf",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ name: "owner", type: "address" }],
+  },
+  {
+    type: "function",
+    name: "tokenURI",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [{ name: "uri", type: "string" }],
+  },
+  {
     type: "event",
     name: "Registered",
     anonymous: false,
