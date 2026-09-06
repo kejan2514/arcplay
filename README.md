@@ -8,6 +8,12 @@ ArcPay is an open-source reference demo for agentic commerce on Arc. It combines
 
 > ArcPay is an experimental testnet project. It is not a production payment service and must not be used with real funds.
 
+## Live deployment
+
+- Production: https://arcplay.vercel.app
+- Network: Arc Testnet
+- ERC-8004 agent metadata: `/api/agent-registration`
+
 ## Features
 
 - Agentic workflow visualization from trigger to settlement
