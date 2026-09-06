@@ -7,6 +7,13 @@ type TrustStatus = {
   network: string;
   chainId: number;
   agentId: number;
+  identity?: {
+    owner: string;
+    tokenURI: string;
+    expectedRegistrationURI: string;
+    uriMatches: boolean;
+    registry: string;
+  };
   reputation?: {
     count: number;
     score: string | null;
@@ -21,6 +28,11 @@ type TrustStatus = {
   updatedAt: string;
   error?: string;
 };
+
+function shortAddress(address?: string) {
+  if (!address) return "Unknown";
+  return `${address.slice(0, 6)}…${address.slice(-4)}`;
+}
 
 export default function ERC8004TrustStatus() {
   const [data, setData] = useState<TrustStatus | null>(null);
@@ -55,7 +67,7 @@ export default function ERC8004TrustStatus() {
         <div>
           <p className="text-sm font-semibold text-white">Live ERC-8004 trust state</p>
           <p className="mt-1 text-sm text-slate-400">
-            Reads the official Arc Testnet ReputationRegistry and ValidationRegistry without inventing scores.
+            Verifies ArcPay&apos;s IdentityRegistry token URI and reads official Arc Testnet reputation and validation state without inventing scores.
           </p>
         </div>
         <span className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-300">
@@ -64,10 +76,14 @@ export default function ERC8004TrustStatus() {
       </div>
 
       {data?.status === "ok" && (
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Agent ID</p>
-            <p className="mt-2 text-xl font-semibold text-white">{data.agentId}</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Identity</p>
+            <p className="mt-2 text-xl font-semibold text-white">#{data.agentId}</p>
+            <p className="mt-1 text-xs text-slate-500">Owner: {shortAddress(data.identity?.owner)}</p>
+            <p className={`mt-1 text-xs ${data.identity?.uriMatches ? "text-emerald-300" : "text-amber-200"}`}>
+              Registration URI: {data.identity?.uriMatches ? "Verified" : "Mismatch"}
+            </p>
           </div>
           <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Reputation</p>
@@ -87,12 +103,17 @@ export default function ERC8004TrustStatus() {
               Requests: {data.validation?.requestCount ?? 0} · Avg: {data.validation?.averageResponse ?? 0}/100
             </p>
           </div>
+          <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Network</p>
+            <p className="mt-2 text-xl font-semibold text-white">Arc Testnet</p>
+            <p className="mt-1 text-xs text-slate-500">Chain ID: {data.chainId}</p>
+          </div>
         </div>
       )}
 
       {!loading && data?.status === "unavailable" && (
         <p className="mt-4 text-sm text-amber-200">
-          Trust registry reads are temporarily unavailable. No reputation or validation value is inferred locally.
+          ERC-8004 registry reads are temporarily unavailable. No identity, reputation, or validation value is inferred locally.
         </p>
       )}
 
