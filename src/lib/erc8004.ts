@@ -1,4 +1,4 @@
-import { ARC_ERC8004 } from "@/lib/erc8004-arc";
+import { ARC_ERC8004 } from "./erc8004-arc";
 
 export const ERC8004_REGISTRATION_TYPE =
   "https://eips.ethereum.org/EIPS/eip-8004#registration-v1";
