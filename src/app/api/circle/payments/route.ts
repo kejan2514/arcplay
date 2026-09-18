@@ -1,3 +1,4 @@
+import { USDC_INTERFACE } from "@/lib/payment-proof";
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -45,10 +46,15 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const { walletId, walletAddress } = getCircleConfiguration();
+    if (!walletId || !walletAddress) return NextResponse.json({ error: "Circle wallet is not configured." }, { status: 503 });
     const response = await getCircleClient().getTransaction({ id });
     const transaction = response.data?.transaction;
     if (!transaction) throw new Error("Circle transaction was not found.");
-    return NextResponse.json({ transaction: publicTransaction(transaction) });
+    if (transaction.walletId !== walletId || transaction.blockchain !== CIRCLE_BLOCKCHAIN || transaction.destinationAddress?.toLowerCase() !== walletAddress.toLowerCase() || !transaction.refId?.startsWith("arcpay-daily-proof-")) {
+      return NextResponse.json({ error: "This transaction is not an ArcPay test proof." }, { status: 404 });
+    }
+    return NextResponse.json({ transaction: { ...publicTransaction(transaction), sender: walletAddress } }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Circle payment status lookup failed", error);
     return NextResponse.json({ error: "Circle transaction status could not be loaded." }, { status: 502 });
@@ -61,6 +67,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Circle payment wallet is not configured." }, { status: 503 });
   }
 
+  // Browser requests must originate from this application.
+  const origin = request.headers.get("origin");
+  if (origin && origin !== request.nextUrl.origin) return NextResponse.json({ error: "Cross-origin payment requests are not allowed." }, { status: 403 });
   const body = await request.json().catch(() => null) as { confirmed?: boolean } | null;
   if (body?.confirmed !== true) {
     return NextResponse.json({ error: "Test payment confirmation is required." }, { status: 400 });
@@ -68,9 +77,14 @@ export async function POST(request: NextRequest) {
 
   try {
     const client = getCircleClient();
+    const walletResponse = await client.getWallet({ id: walletId });
+    const wallet = walletResponse.data?.wallet;
+    if (wallet?.blockchain !== CIRCLE_BLOCKCHAIN || wallet.address.toLowerCase() !== walletAddress.toLowerCase()) {
+      return NextResponse.json({ error: "Circle wallet must match the configured Arc Testnet address." }, { status: 409 });
+    }
     const balanceResponse = await client.getWalletTokenBalance({ id: walletId, includeAll: true });
     const usdc = (balanceResponse.data?.tokenBalances ?? [])
-      .filter((balance) => balance.token?.symbol === "USDC" && balance.token?.id)
+      .filter((balance) => balance.token?.symbol === "USDC" && balance.token?.id && balance.token.blockchain === CIRCLE_BLOCKCHAIN && (balance.token.isNative || balance.token.tokenAddress?.toLowerCase() === USDC_INTERFACE))
       .sort((left, right) => Number(right.amount) - Number(left.amount))[0];
 
     if (!usdc?.token?.id || Number(usdc.amount) < Number(PROOF_AMOUNT)) {

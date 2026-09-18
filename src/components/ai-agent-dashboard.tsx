@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 type ArcNetworkData = {
   network: string;
-  status: "online" | "unavailable";
+  status: "online" | "degraded" | "unavailable";
   chainId: number;
   latestBlock?: string;
   blockAgeSeconds?: number;
@@ -59,7 +59,7 @@ export default function AIAgentDashboard() {
       {
         title: "Arc Network",
         lines: [
-          loading ? "Checking RPC…" : network?.status === "online" ? "Online" : "Unavailable",
+          loading ? "Checking RPC…" : network?.status === "online" ? "Online" : network?.status === "degraded" ? "Stale blocks" : "Unavailable",
           network?.network || "Arc Testnet",
           network?.latestBlock ? `Latest block: #${network.latestBlock}` : "Live block unavailable",
         ],
@@ -117,7 +117,7 @@ export default function AIAgentDashboard() {
             <p className="mt-2 text-sm text-slate-400">Network values come from Arc Testnet RPC. Agent actions remain approval-first and testnet-only.</p>
           </div>
           <div className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] ${network?.status === "online" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-amber-400/30 bg-amber-400/10 text-amber-300"}`}>
-            {loading ? "Checking" : network?.status === "online" ? "Arc Online" : "RPC Unavailable"}
+            {loading ? "Checking" : network?.status === "online" ? "Arc Online" : network?.status === "degraded" ? "Stale blocks" : "RPC Unavailable"}
           </div>
         </div>
 

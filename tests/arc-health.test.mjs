@@ -24,3 +24,7 @@ test("unreachable Arc RPC reports unavailable", () => {
   assert.equal(getArcHealthStatus(0, false), "unavailable");
   assert.equal(getArcHealthStatus(Number.POSITIVE_INFINITY, false), "unavailable");
 });
+
+test("invalid block ages cannot produce healthy telemetry", () => {
+  for (const age of [NaN, Infinity, -1]) assert.equal(getArcHealthStatus(age), "degraded");
+});

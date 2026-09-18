@@ -14,7 +14,8 @@ export async function GET() {
   const startedAt = Date.now();
 
   try {
-    const blockNumber = await client.getBlockNumber();
+    const [blockNumber, chainId] = await Promise.all([client.getBlockNumber(), client.getChainId()]);
+    if (chainId !== arcTestnet.id) throw new Error("RPC chain mismatch");
     const block = await client.getBlock({ blockNumber });
     const latencyMs = Date.now() - startedAt;
     const blockTimestampMs = Number(block.timestamp) * 1000;

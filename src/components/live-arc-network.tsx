@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 type ArcTelemetry = {
   network: string;
-  status: "online" | "unavailable";
+  status: "online" | "degraded" | "unavailable";
   chainId: number;
   latestBlock?: string;
   blockTimestamp?: string;
@@ -41,7 +41,7 @@ export default function LiveArcNetwork() {
           setError(false);
         }
       } catch {
-        if (active) setError(true);
+        if (active) { setError(true); setTelemetry(null); }
       }
     }
 
@@ -54,11 +54,11 @@ export default function LiveArcNetwork() {
   }, []);
 
   const cards = useMemo(() => {
-    if (!telemetry) return fallbackCards;
+    if (!telemetry) return error ? fallbackCards.map((card) => ({ ...card, value: card.title === "Arc Testnet" ? "Unavailable" : "—", detail: "Live data unavailable" })) : fallbackCards;
     return [
       {
         title: "Arc Testnet",
-        value: telemetry.status === "online" ? "Online" : "Unavailable",
+        value: telemetry.status === "online" ? "Online" : telemetry.status === "degraded" ? "Stale blocks" : "Unavailable",
         detail: telemetry.rpcHost || "Official Arc RPC",
         accent: "from-emerald-500/20 to-cyan-500/10",
       },
@@ -93,13 +93,13 @@ export default function LiveArcNetwork() {
         accent: "from-cyan-500/20 to-fuchsia-500/10",
       },
     ];
-  }, [telemetry]);
+  }, [telemetry, error]);
 
   const readiness = [
     { label: "Wallet connectivity", state: "Implemented" },
     { label: "Circle wallet backend", state: "Implemented" },
     { label: "USDC bridge flow", state: "Implemented" },
-    { label: "Live Arc telemetry", state: telemetry?.status === "online" ? "Live" : "Connecting" },
+    { label: "Live Arc telemetry", state: error ? "Unavailable" : telemetry?.status === "degraded" ? "Stale" : telemetry?.status === "online" ? "Live" : "Connecting" },
   ];
 
   return (
@@ -114,7 +114,7 @@ export default function LiveArcNetwork() {
             </p>
           </div>
           <span className={`inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-semibold ${error ? "border-rose-400/30 bg-rose-400/10 text-rose-200" : "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"}`}>
-            {error ? "RPC unavailable" : telemetry ? "Live • Testnet" : "Connecting…"}
+            {error ? "RPC unavailable" : telemetry?.status === "degraded" ? "Stale blocks • Testnet" : telemetry ? "Live • Testnet" : "Connecting…"}
           </span>
         </div>
 
