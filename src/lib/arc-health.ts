@@ -7,7 +7,7 @@ export function getArcHealthStatus(
   rpcReachable = true,
 ): ArcHealthStatus {
   if (!rpcReachable) return "unavailable";
-  return blockAgeSeconds <= STALE_BLOCK_THRESHOLD_SECONDS ? "ok" : "degraded";
+  return Number.isFinite(blockAgeSeconds) && blockAgeSeconds >= 0 && blockAgeSeconds <= STALE_BLOCK_THRESHOLD_SECONDS ? "ok" : "degraded";
 }
 
 export function isFreshArcBlock(blockAgeSeconds: number): boolean {

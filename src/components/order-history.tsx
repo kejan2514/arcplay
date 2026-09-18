@@ -1,88 +1,49 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { ARC_NETWORK } from "@/lib/arc-network";
-import {
-  DEMO_ORDER_EVENT,
-  type DemoOrder,
-  readDemoOrders,
-} from "@/lib/demo-orders";
-
-function shortHash(hash: string) {
-  return `${hash.slice(0, 8)}…${hash.slice(-6)}`;
-}
-
-function isTransactionHash(value: string) {
-  return /^0x[0-9a-fA-F]{64}$/.test(value);
-}
+import { useEffect, useRef, useState } from "react";
+import { DEMO_ORDER_EVENT, type DemoOrder, readDemoOrders, saveDemoOrder } from "@/lib/demo-orders";
+import { checkPayment } from "@/lib/check-payment";
+import { isHash } from "@/lib/payment-proof";
+import PaymentReceiptCard from "@/components/payment-receipt";
 
 export default function OrderHistory() {
   const [orders, setOrders] = useState<DemoOrder[]>([]);
-
+  const [checking, setChecking] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
+  const busy = useRef(false);
   useEffect(() => {
     const refresh = () => setOrders(readDemoOrders());
-    const initialRead = window.setTimeout(refresh, 0);
+    const timer = window.setTimeout(refresh, 0);
     window.addEventListener(DEMO_ORDER_EVENT, refresh);
-    return () => {
-      window.clearTimeout(initialRead);
-      window.removeEventListener(DEMO_ORDER_EVENT, refresh);
-    };
+    window.addEventListener("storage", refresh);
+    return () => { window.clearTimeout(timer); window.removeEventListener(DEMO_ORDER_EVENT, refresh); window.removeEventListener("storage", refresh); };
   }, []);
-
-  return (
-    <section className="mt-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-fuchsia-300">
-          Local history
-        </p>
-        <h2 className="mt-2 text-2xl font-bold text-white">Demo orders</h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Stored only in this browser. No real game credits are delivered.
-        </p>
-      </div>
-
-      {orders.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-slate-700 px-5 py-8 text-center text-sm text-slate-500">
-          Your successful ArcPlay test orders will appear here.
+  async function check(order: DemoOrder) {
+    if (busy.current) return;
+    busy.current = true; setChecking(order.id); setMessage("");
+    try {
+      const result = await checkPayment(order);
+      const saved = saveDemoOrder(result.order);
+      setMessage((result.result.status === "confirmed" ? "Self-transfer confirmed. The receipt is ready." : result.result.message) + (saved ? "" : " Browser storage is unavailable."));
+    } finally { busy.current = false; setChecking(null); }
+  }
+  return <section className="mt-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8">
+    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-fuchsia-300">Local history</p>
+    <h2 className="mt-2 text-2xl font-bold text-white">Demo orders & transaction proofs</h2>
+    <p className="mt-2 text-sm text-slate-400">Stored only in this browser. Saved receipts are local records, not merchant payment authorizations. Recheck to read the chain again.</p>
+    {message ? <p role="status" className="mt-3 text-sm text-cyan-200">{message}</p> : null}
+    {!orders.length ? <p className="mt-6 rounded-2xl border border-dashed border-slate-700 px-5 py-8 text-center text-sm text-slate-500">Submitted proofs and demo orders will appear here.</p> : <div className="mt-6 space-y-3">{orders.map((order) => {
+      const onchain = isHash(order.transactionHash) || Boolean(order.circleId);
+      const label = order.receipt ? "Confirmed · saved receipt" : order.status === "pending" ? "Awaiting confirmation" : order.status === "reverted" ? "Failed" : order.status === "mismatch" ? "Proof mismatch" : onchain ? "Legacy · unverified" : "Simulation · no payment";
+      return <article key={order.id} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3"><p className="font-semibold text-white">{order.game} · {order.product}</p><span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-200">{label}</span></div>
+        <p className="mt-2 text-xs text-slate-500">Player {order.playerId} · {new Date(order.createdAt).toLocaleString()}</p>
+        <div className="mt-3 flex flex-wrap gap-4">
+          {isHash(order.transactionHash) ? <a href={`https://testnet.arcscan.app/tx/${order.transactionHash}`} target="_blank" rel="noreferrer" className="text-sm text-cyan-300">View transaction ↗</a> : null}
+          {order.kind && (order.sender || order.circleId) ? <button type="button" disabled={checking !== null} onClick={() => void check(order)} className="text-sm text-cyan-200 disabled:opacity-50">{checking === order.id ? "Checking…" : "Check status · no new transaction"}</button> : null}
         </div>
-      ) : (
-        <div className="mt-6 space-y-3">
-          {orders.map((order) => {
-            const hasArcTransaction = isTransactionHash(order.transactionHash);
-
-            return (
-              <article
-                key={order.id}
-                className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-semibold text-white">{order.game || "PUBG Mobile"} · {order.product}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-xs ${hasArcTransaction ? "bg-emerald-400/10 text-emerald-300" : "bg-amber-400/10 text-amber-200"}`}>
-                    {hasArcTransaction ? "Arc verified" : order.transactionHash.startsWith("Apple Pay") ? "Apple Pay DEMO" : "Google Pay TEST"}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-slate-500">
-                  Player {order.playerId} · {new Date(order.createdAt).toLocaleString()}
-                </p>
-              </div>
-                {hasArcTransaction ? (
-                  <a
-                    href={`${ARC_NETWORK.explorerUrl}/tx/${order.transactionHash}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-mono text-sm font-semibold text-cyan-300 hover:text-cyan-200"
-                  >
-                    {shortHash(order.transactionHash)} ↗
-                  </a>
-                ) : (
-                  <span className="text-sm font-semibold text-slate-400">No Arc transaction</span>
-                )}
-              </article>
-            );
-          })}
-        </div>
-      )}
-    </section>
-  );
+        {order.circleId && !isHash(order.transactionHash) ? <p className="mt-2 break-all text-xs text-slate-500">Circle reference: {order.circleId}</p> : null}
+        {order.receipt ? <details className="mt-3"><summary className="cursor-pointer text-sm text-emerald-300">View receipt & download</summary><PaymentReceiptCard receipt={order.receipt} /></details> : null}
+      </article>;
+    })}</div>}
+  </section>;
 }

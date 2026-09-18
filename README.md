@@ -25,7 +25,7 @@ ArcPay is an open-source reference demo for agentic commerce on Arc. It combines
 - Live Arc Testnet block, chain ID, block age, and RPC latency telemetry
 - Arc-aware health endpoint for deployment and uptime monitoring
 - Game-credit catalog and PUBG test checkout
-- Local order history for completed demo purchases
+- Recoverable local proof history, read-only status checks and downloadable verified receipts
 - Responsive, glassmorphism-based Arc visual theme
 
 ## Architecture
@@ -98,7 +98,7 @@ The `/api/arc-network` server route reads Arc Testnet using `viem` and exposes t
 
 ### Arc health endpoint
 
-The `/api/health` route is designed for deployment probes and uptime checks. It verifies that Arc Testnet RPC is reachable, reads the latest block, measures RPC latency, and marks the service as degraded when the latest block is more than 120 seconds old. Healthy checks return HTTP 200; degraded or unavailable checks return HTTP 503.
+The `/api/health` route is designed for deployment probes and uptime checks. It verifies that Arc Testnet RPC is reachable, reads the latest block, measures RPC latency, checks the returned chain ID, and marks the service as degraded when the latest block is more than 120 seconds old. Healthy checks return HTTP 200; degraded or unavailable checks return HTTP 503.
 
 ### ERC-8004 agent identity
 
@@ -143,6 +143,17 @@ These values are server-only. Never add a `NEXT_PUBLIC_` prefix, paste them into
 
 The current integration creates an EOA on `ARC-TESTNET`, reads its token balance, and links to the official Circle Faucet for manual test USDC funding. It does not transfer real USDC or deliver a product.
 
+## Verifiable payment proofs
+
+Checkout now waits for a successful Arc Testnet receipt and validates the sender,
+recipient and exact self-transfer amount through the server RPC. A timeout stays
+pending; checking again never creates another payment. Downloadable receipts show
+actual transferred USDC, the network fee and the block. Catalog prices are not charged.
+
+See [API, recovery and testing guide](docs/payment-proofs.md), the
+[read-only integration example](examples/verify-proof.mjs), and
+[mainnet readiness plan](docs/mainnet-readiness.md).
+
 ## Testnet disclaimer
 
 ArcPay is demonstration software. Live Arc telemetry is read from Arc Testnet, while AI-agent analytics and other showcase metrics may still be illustrative unless explicitly connected to a live provider. Contract addresses, token details, and wallet prompts must be independently verified before signing. Never send production assets or real USDC to testnet contracts or addresses.
@@ -161,7 +172,8 @@ ArcPay is demonstration software. Live Arc telemetry is read from Arc Testnet, w
 - [ ] Add onchain reputation and validation registry reads
 - [ ] Implement Vyper payment-policy contracts
 - [ ] Ship a configurable workflow builder and merchant SDK
-- [ ] Expand automated application tests and audited production safeguards
+- [x] Add verified self-transfer receipts, recovery and checkout regression tests
+- [ ] Add production merchant settlement and audited production safeguards
 
 ## License
 

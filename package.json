@@ -8,10 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "rm -rf .test-dist && tsc src/lib/arc-health.ts src/lib/erc8004.ts --target ES2022 --module NodeNext --moduleResolution NodeNext --outDir .test-dist --skipLibCheck && node --test tests/arc-health.test.mjs tests/erc8004.test.mjs && rm -rf .test-dist",
+    "test": "rm -rf .test-dist && tsc src/lib/arc-health.ts src/lib/erc8004.ts src/lib/payment-proof.ts src/lib/demo-orders.ts src/lib/check-payment.ts --target ES2022 --module NodeNext --moduleResolution NodeNext --lib ES2022,DOM --outDir .test-dist --skipLibCheck && node --test tests/*.test.mjs && rm -rf .test-dist",
     "circle:register-secret": "node --env-file=.env.local scripts/register-circle-entity-secret.mjs",
     "circle:provision-wallet": "node --env-file=.env.local scripts/provision-circle-wallet.mjs",
-    "circle:sync-wallet": "node scripts/sync-circle-wallet-env.mjs"
+    "circle:sync-wallet": "node scripts/sync-circle-wallet-env.mjs",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@circle-fin/adapter-viem-v2": "^1.14.0",
@@ -23,6 +24,7 @@
     "viem": "^2.55.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -1,3 +1,4 @@
+import { getArcHealthStatus } from "@/lib/arc-health";
 import { NextResponse } from "next/server";
 import { createPublicClient, http } from "viem";
 import { arcTestnet } from "viem/chains";
@@ -17,6 +18,7 @@ export async function GET() {
       client.getBlockNumber(),
       client.getChainId(),
     ]);
+    if (chainId !== arcTestnet.id) throw new Error("RPC chain mismatch");
     const block = await client.getBlock({ blockNumber });
     const latencyMs = Date.now() - startedAt;
     const blockTimestampMs = Number(block.timestamp) * 1000;
@@ -25,7 +27,7 @@ export async function GET() {
     return NextResponse.json(
       {
         network: "Arc Testnet",
-        status: "online",
+        status: getArcHealthStatus(blockAgeSeconds) === "ok" ? "online" : "degraded",
         chainId,
         latestBlock: blockNumber.toString(),
         blockTimestamp: new Date(blockTimestampMs).toISOString(),
