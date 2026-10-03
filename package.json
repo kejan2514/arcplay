@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "rm -rf .test-dist && tsc src/lib/arc-health.ts src/lib/erc8004.ts src/lib/payment-proof.ts src/lib/demo-orders.ts src/lib/check-payment.ts --target ES2022 --module NodeNext --moduleResolution NodeNext --lib ES2022,DOM --outDir .test-dist --skipLibCheck && node --test tests/*.test.mjs && rm -rf .test-dist",
+    "test": "rm -rf .test-dist && tsc src/lib/arc-health.ts src/lib/erc8004.ts src/lib/payment-proof.ts src/lib/demo-orders.ts src/lib/check-payment.ts src/lib/workflow-drafts.ts --target ES2022 --module NodeNext --moduleResolution NodeNext --lib ES2022,DOM --outDir .test-dist --skipLibCheck && node --test tests/*.test.mjs && rm -rf .test-dist",
     "circle:register-secret": "node --env-file=.env.local scripts/register-circle-entity-secret.mjs",
     "circle:provision-wallet": "node --env-file=.env.local scripts/provision-circle-wallet.mjs",
     "circle:sync-wallet": "node scripts/sync-circle-wallet-env.mjs",
@@ -18,7 +18,7 @@
     "@circle-fin/adapter-viem-v2": "^1.14.0",
     "@circle-fin/bridge-kit": "^1.12.1",
     "@circle-fin/developer-controlled-wallets": "^10.8.0",
-    "next": "16.2.10",
+    "next": "16.3.8",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "viem": "^2.55.2"
@@ -30,7 +30,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.10",
+    "eslint-config-next": "16.3.8",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

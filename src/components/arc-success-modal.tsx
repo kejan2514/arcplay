@@ -29,14 +29,14 @@ export default function ArcSuccessModal({ open, title, description, detail, expl
           <span className="absolute bottom-1 right-3 flex h-9 w-9 items-center justify-center rounded-full border-4 border-slate-950 bg-emerald-400 text-lg font-black text-slate-950">✓</span>
         </div>
 
-        <p className="mt-6 text-xs font-semibold uppercase tracking-[0.4em] text-cyan-300">Completed on Arc</p>
+        <p className="mt-6 text-xs font-semibold uppercase tracking-[0.4em] text-cyan-300">{explorerUrl ? "Verified on Arc Testnet" : "Demo completed"}</p>
         <h2 id="arc-success-title" className="mt-3 text-3xl font-black text-white sm:text-4xl">{title}</h2>
         <p className="mx-auto mt-4 max-w-md leading-7 text-slate-300">{description}</p>
         {detail ? <p className="mt-3 text-sm font-semibold text-emerald-300">{detail}</p> : null}
 
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
           {explorerUrl ? <a href={explorerUrl} target="_blank" rel="noreferrer" className="rounded-full bg-gradient-to-r from-cyan-400 to-fuchsia-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:brightness-110">View on ArcScan ↗</a> : null}
-          <button type="button" onClick={onClose} className={`rounded-full border border-cyan-300/30 bg-cyan-300/10 px-5 py-3 text-sm font-bold text-cyan-100 transition hover:border-cyan-200 hover:bg-cyan-300/20 ${explorerUrl ? "" : "sm:col-span-2"}`}>Continue with ArcPay</button>
+          <button type="button" onClick={onClose} className={`rounded-full border border-cyan-300/30 bg-cyan-300/10 px-5 py-3 text-sm font-bold text-cyan-100 transition hover:border-cyan-200 hover:bg-cyan-300/20 ${explorerUrl ? "" : "sm:col-span-2"}`}>Continue with ArcPlay</button>
         </div>
         <p className="mt-6 text-xs uppercase tracking-[0.25em] text-slate-600">Fast · Programmable · Onchain</p>
       </div>
