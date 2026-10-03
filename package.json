@@ -15,13 +15,13 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@circle-fin/adapter-viem-v2": "^1.14.0",
-    "@circle-fin/bridge-kit": "^1.12.1",
-    "@circle-fin/developer-controlled-wallets": "^10.8.0",
+    "@circle-fin/adapter-viem-v2": "^1.19.0",
+    "@circle-fin/bridge-kit": "^1.15.2",
+    "@circle-fin/developer-controlled-wallets": "^10.8.1",
     "next": "16.3.8",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "viem": "^2.55.2"
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "viem": "^2.57.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
