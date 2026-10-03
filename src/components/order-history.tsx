@@ -26,7 +26,7 @@ export default function OrderHistory() {
       setMessage((result.result.status === "confirmed" ? "Self-transfer confirmed. The receipt is ready." : result.result.message) + (saved ? "" : " Browser storage is unavailable."));
     } finally { busy.current = false; setChecking(null); }
   }
-  return <section className="mt-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8">
+  return <section id="history" className="mx-auto max-w-7xl mt-8 rounded-3xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8">
     <p className="text-xs font-semibold uppercase tracking-[0.3em] text-fuchsia-300">Local history</p>
     <h2 className="mt-2 text-2xl font-bold text-white">Demo orders & transaction proofs</h2>
     <p className="mt-2 text-sm text-slate-400">Stored only in this browser. Saved receipts are local records, not merchant payment authorizations. Recheck to read the chain again.</p>

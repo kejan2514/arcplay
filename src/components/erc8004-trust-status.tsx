@@ -88,7 +88,7 @@ export default function ERC8004TrustStatus() {
           <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Reputation</p>
             <p className="mt-2 text-xl font-semibold text-white">
-              {data.reputation?.count ?? 0} feedback
+              {data.reputation ? `${data.reputation.count} feedback` : "Unavailable"}
             </p>
             <p className="mt-1 text-xs text-slate-500">
               Score: {data.reputation?.score ?? "No signal yet"}
@@ -97,10 +97,10 @@ export default function ERC8004TrustStatus() {
           <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Validation</p>
             <p className="mt-2 text-xl font-semibold text-white">
-              {data.validation?.count ?? 0} responses
+              {data.validation ? `${data.validation.count} responses` : "Unavailable"}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              Requests: {data.validation?.requestCount ?? 0} · Avg: {data.validation?.averageResponse ?? 0}/100
+              Requests: {data.validation?.requestCount ?? "Unavailable"} · {data.validation && data.validation.count > 0 ? `Avg: ${data.validation.averageResponse}/100` : "No validation signal yet"}
             </p>
           </div>
           <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-4">

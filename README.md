@@ -1,10 +1,10 @@
-# ArcPay
+# ArcPlay
 
 [![CI](https://github.com/kejan2514/arcplay/actions/workflows/ci.yml/badge.svg)](https://github.com/kejan2514/arcplay/actions/workflows/ci.yml)
 
-**The Agentic Commerce Layer on Arc.**
+**Gaming payments on Arc, powered by ArcPay.**
 
-ArcPay is an open-source reference demo for agentic commerce on Arc. It combines autonomous payment workflows, wallet connectivity, Circle USDC bridging, a game-credit checkout, transaction history, live Arc Testnet telemetry, and an ERC-8004-compatible agent registration profile in one dark, responsive developer experience.
+ArcPlay is an open-source gaming commerce demo on Arc Testnet. The marketplace is the main entry point; bridge, workflow drafts, transaction activity, ecosystem research and developer infrastructure have dedicated screens. ArcPay remains the payment and agent identity infrastructure. Workflows are editable browser-local drafts, not active schedules or merchant purchase authorizations.
 
 > ArcPay is an experimental testnet project. It is not a production payment service and must not be used with real funds.
 
@@ -16,8 +16,8 @@ ArcPay is an open-source reference demo for agentic commerce on Arc. It combines
 
 ## Features
 
-- Agentic workflow visualization from trigger to settlement
-- AI agent status, reputation, and analytics dashboard
+- Editable, browser-local weekly/monthly workflow drafts with recipient and budget validation
+- Separate marketplace, automations, bridge, activity and infrastructure screens
 - ERC-8004 registration-v1 compatible agent identity metadata
 - Wallet connection and testnet USDC balance display
 - Circle Bridge Kit flow for bridging USDC to Arc
@@ -178,3 +178,14 @@ ArcPay is demonstration software. Live Arc telemetry is read from Arc Testnet, w
 ## License
 
 This project is available under the [MIT License](LICENSE).
+
+## Product experience
+
+- `/`: game catalog, test checkout, verified proof receipts and local order history.
+- `/automations`: editable templates and saved browser-local drafts. No scheduler, autonomous signing, policy enforcement or product delivery is enabled.
+- `/bridge`: one Circle CCTP bridge with wallet approval and lifecycle steps.
+- `/activity`: local orders, transaction status checks and receipt downloads.
+- `/developers`: live Arc telemetry, ERC-8004 trust state and Circle wallet infrastructure.
+- `/ecosystem`: community research listings, with existing Arc support labels retained.
+
+Checkout can hand its game and package to the workflow builder. Player identifiers and wallet addresses are not put into handoff URLs. Saving a draft validates the catalog package, non-zero recipient address, schedule day and spending limits; these rules describe the draft and do not enforce live payments. Validation scores remain absent until an onchain response exists.
